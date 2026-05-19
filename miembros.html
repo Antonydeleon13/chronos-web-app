@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronos — Portal de Miembros</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #08090d;
+            --window-bg: rgba(18, 20, 29, 0.65);
+            --text-main: #ffffff;
+            --text-muted: #8e95a5;
+            --text-labels: #94a3b8;
+            --border-window: rgba(255, 255, 255, 0.06);
+            --accent-gradient: linear-gradient(135deg, #ffffff 0%, #a3a3a3 100%);
+            --success: #34d399;
+            --primary-btn: rgba(255, 255, 255, 0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Navbar Superior Global */
+        .top-navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.25rem 2rem; background: rgba(8, 9, 13, 0.6);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-window); position: sticky; top: 0; z-index: 100;
+        }
+        .nav-brand { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.25rem; letter-spacing: -0.02em; }
+        .nav-profile { display: flex; align-items: center; gap: 1rem; }
+        .user-tag { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); background: rgba(255, 255, 255, 0.03); padding: 0.35rem 0.75rem; border-radius: 20px; border: 1px solid var(--border-window); }
+        .btn-logout { background: transparent; border: none; color: var(--text-muted); font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: color 0.2s; }
+        .btn-logout:hover { color: var(--error); }
+
+        /* Contenedor de la Suite Principal */
+        .portal-container {
+            flex: 1; display: grid; grid-template-columns: 320px 1fr; gap: 2rem;
+            max-width: 1600px; width: 100%; margin: 0 auto; padding: 2rem;
+        }
+
+        /* Bloques de Ventanas */
+        .panel-window {
+            background: var(--window-bg); border: 1px solid var(--border-window);
+            border-radius: 24px; padding: 2rem; height: calc(100vh - 180px);
+            display: flex; flex-direction: column; overflow: hidden;
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+        }
+        .panel-window h3 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.25rem; margin-bottom: 1.5rem; letter-spacing: -0.01em; }
+
+        /* Lista de Cultos Izquierda */
+        .scrollable-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; padding-right: 0.25rem; }
+        .scrollable-list::-webkit-scrollbar { width: 6px; }
+        .scrollable-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
+
+        .service-item {
+            background: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.02);
+            border-radius: 16px; padding: 1.2rem; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .service-item:hover { background: rgba(255, 255, 255, 0.03); border-color: rgba(255, 255, 255, 0.06); transform: translateY(-1px); }
+        .service-item.active { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.15); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .service-info h5 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.25rem; }
+        .service-info p { font-size: 0.75rem; color: var(--text-muted); }
+        .service-meta { text-align: right; font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+        .service-time { color: var(--text-labels); font-weight: 600; margin-top: 0.15rem; }
+
+        /* Área de Trabajo de la Derecha */
+        .work-workspace { flex: 1; overflow-y: auto; display: grid; grid-template-columns: 1fr 340px; gap: 2rem; padding-right: 0.25rem; }
+        .work-workspace::-webkit-scrollbar { width: 6px; }
+        .work-workspace::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
+
+        /* Pestañas de Navegación del Itinerario */
+        .tabs-nav { display: flex; gap: 0.5rem; background: rgba(0, 0, 0, 0.2); padding: 0.35rem; border-radius: 14px; margin-bottom: 1.75rem; border: 1px solid rgba(255,255,255,0.01); }
+        .tab-btn { flex: 1; background: transparent; border: none; color: var(--text-muted); font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 600; cursor: pointer; padding: 0.65rem; border-radius: 10px; transition: all 0.2s; }
+        .tab-btn:hover { color: var(--text-main); }
+        .tab-btn.active { color: #ffffff; background: rgba(255, 255, 255, 0.06); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Tablas de Escaleta */
+        .plan-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .plan-table th { font-size: 0.7rem; color: var(--text-labels); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-window); }
+        .plan-table td { padding: 1.1rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.02); font-size: 0.875rem; vertical-align: middle; }
+        .plan-duration { font-family: 'Inter', sans-serif; font-weight: 500; color: var(--text-muted); font-size: 0.825rem; }
+
+        /* 🎸 DISEÑO PREMIUM DE SETLIST DE MÚSICA CON ADJUNTOS */
+        .song-card {
+            background: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem;
+            display: flex; flex-direction: column; gap: 1rem; transition: border-color 0.2s;
+        }
+        .song-card:hover { border-color: rgba(255, 255, 255, 0.08); }
+        .song-header { display: flex; justify-content: space-between; align-items: center; }
+        .song-title { font-size: 0.95rem; font-weight: 600; color: var(--text-main); }
+        .song-key { background: rgba(52, 211, 153, 0.1); color: var(--success); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        
+        .song-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .btn-resource {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: var(--primary-btn); border: 1px solid var(--border-window);
+            color: var(--text-main); padding: 0.45rem 0.85rem; border-radius: 8px;
+            font-size: 0.75rem; font-weight: 500; text-decoration: none; transition: all 0.2s;
+            cursor: pointer;
+        }
+        .btn-resource:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.2); }
+        
+        /* Reproductor de Audio estilizado incorporado */
+        .audio-wrapper { background: rgba(0, 0, 0, 0.2); padding: 0.5rem; border-radius: 10px; width: 100%; border: 1px solid rgba(255,255,255,0.02); }
+        audio { width: 100%; height: 32px; outline: none; }
+
+        /* Caja del Bosquejo */
+        .sketch-box {
+            background: rgba(0,0,0,0.15); border: 1px solid var(--border-window);
+            border-radius: 16px; padding: 1.5rem; font-size: 0.9rem; line-height: 1.6;
+            color: rgba(255,255,255,0.9); white-space: pre-wrap; overflow-y: auto; max-height: 400px;
+        }
+
+        /* Sección Lateral de Equipo (Gente) */
+        .team-section { background: rgba(255, 255, 255, 0.01); border-radius: 20px; padding: 1.5rem; border: 1px solid rgba(255, 255, 255, 0.02); display: flex; flex-direction: column; gap: 1rem; }
+        .team-section h4 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; color: var(--text-main); }
+        .people-row { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .people-row:last-child { border-bottom: none; }
+        .person-name { font-size: 0.85rem; font-weight: 600; color: #ffffff; }
+        .person-role { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; background: rgba(255,255,255,0.02); padding: 0.2rem 0.5rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.02); }
+
+        /* Mensaje de estado inicial */
+        .empty-workspace-state { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: var(--text-muted); font-size: 0.85rem; text-align: center; gap: 0.5rem; }
+
+        @media (max-width: 1100px) {
+            .portal-container { grid-template-columns: 1fr; }
+            .panel-window { height: auto; max-height: 400px; }
+            .work-workspace { grid-template-columns: 1fr; }
+        }
+
+
+        /* 🚀 ESTILOS PREMIUM PARA ESCALETA EN TIEMPO REAL */
+        .plan-table th {
+            font-size: 0.65rem;
+            letter-spacing: 0.08em;
+            color: var(--text-labels);
+            padding: 1rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.04);
+        }
+        .plan-row {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .plan-row td {
+            padding: 1.25rem 1rem !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02) !important;
+        }
+        /* Estado En Vivo */
+        .plan-row.live-now {
+            background: rgba(52, 211, 153, 0.04) !important;
+            box-shadow: inset 3px 0 0 var(--success);
+        }
+        .plan-row.live-now td {
+            color: #ffffff;
+        }
+        /* Estado Finalizado */
+        .plan-row.past-item {
+            opacity: 0.45;
+        }
+        /* Badges de tracking */
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: rgba(52, 211, 153, 0.12);
+            color: var(--success);
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .time-range-display {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            color: var(--text-labels);
+            font-size: 0.85rem;
+        }
+        .live-now .time-range-display {
+            color: var(--success);
+        }
+
+
+/* 🎵 SETLIST DESIGN ULTRA-COMPACT & PREMIUM */
+        .setlist-header-row {
+            display: grid;
+            /* 🌟 Exactamente la misma distribución que las canciones */
+            grid-template-columns: 2fr 1fr 1fr 3.5fr; 
+            padding: 0.75rem 1rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.04);
+            font-size: 0.65rem;
+            color: var(--text-labels);
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            gap: 1.5rem;
+        }
+
+
+        .song-track-item {
+            display: grid;
+            /* 🌟 Le damos un 3.5 de espacio al audio (antes tenía 2fr). Esto estirará la barra horizontalmente */
+            grid-template-columns: 2fr 1fr 1fr 3.5fr; 
+            align-items: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.005);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            transition: all 0.2s ease;
+            gap: 1.5rem; /* Aumentamos un poco el espacio entre columnas */
+        }
+
+        .song-track-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .song-track-title-zone {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .song-track-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+        .song-track-key {
+            background: rgba(52, 211, 153, 0.08);
+            color: var(--success);
+            padding: 0.2rem 0.45rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            border: 1px solid rgba(52, 211, 153, 0.15);
+            display: inline-block;
+            text-transform: none !important; /* 🌟 FUERZA A RESPETAR TUS MINÚSCULAS (Bb, Gm, C#m) */
+        }
+        
+        /* Mini Botones Premium de Recursos */
+        .btn-mini-resource {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: all 0.2s;
+            width: fit-content;
+        }
+        .btn-mini-resource:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Reproductor de Audio Minimalista Oculto/Compacto */
+        .compact-audio-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.7rem;
+        }
+        .compact-audio-btn:hover {
+            background: var(--success);
+            color: #08090d;
+            border-color: var(--success);
+            box-shadow: 0 0 12px rgba(52, 211, 153, 0.3);
+        }
+        .compact-audio-btn.playing {
+            background: #ffffff;
+            color: #08090d;
+            border-color: #ffffff;
+        }
+
+        /* 🎵 CONTENEDOR DE AUDIO EXPANDIDO ABAJO */
+        .audio-column-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        /* 🌟 Añade esta pequeña regla abajo para forzar al reproductor nativo a estirarse */
+        .audio-column-container audio {
+            width: 100% !important;
+            display: block;
+        }
+        
+        audio {
+            width: 100%; /* Barra larga completa */
+            height: 32px;
+            outline: none;
+        }
+
+/* 🌟 RESPONSIVIDAD PREMIUM PARA MÓVILES (IPHONE / ANDROID) */
+        @media (max-width: 768px) {
+            /* Ocultamos la cabecera de texto plana porque en móvil no tiene sentido */
+            .setlist-header-row {
+                display: none !important;
+            }
+
+            /* Transformamos la fila en una Tarjeta (Card) limpia */
+            .song-track-item {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                background: rgba(255, 255, 255, 0.02) !important;
+                border: 1px solid rgba(255, 255, 255, 0.04) !important;
+                border-radius: 16px !important;
+                padding: 1.25rem !important;
+                margin-bottom: 1rem !important;
+                gap: 1rem !important;
+                width: 100% !important;
+            }
+
+            /* Zona del título y tonalidad arriba en una sola línea */
+            .song-track-title-zone {
+                width: 100% !important;
+                display: flex !important;
+                align-items: center !important;
+                gap: 0.75rem !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+                padding-bottom: 0.5rem !important;
+            }
+
+            .song-track-title {
+                font-size: 1rem !important; /* Texto más grande y legible */
+                white-space: normal !important; /* Evita que se corten las palabras */
+            }
+
+            /* Contenedor para agrupar los botones de PDF uno al lado del otro */
+            .song-track-item > div:nth-child(2), 
+            .song-track-item > div:nth-child(3) {
+                display: inline-block !important;
+                width: auto !important;
+            }
+
+            /* Forzamos a que los botones compartan fila de manera elegante */
+            .btn-mini-resource {
+                padding: 0.5rem 1rem !important;
+                font-size: 0.8rem !important;
+                background: rgba(255, 255, 255, 0.04) !important;
+                border-radius: 8px !important;
+            }
+
+            /* 🎸 LA MAGIA DEL AUDIO: Barra 100% larga y horizontal en el teléfono */
+            .song-track-item > div:nth-child(4) {
+                width: 100% !important;
+            }
+
+            .audio-column-container {
+                width: 100% !important;
+                margin-top: 0.25rem !important;
+            }
+
+            .audio-column-container audio {
+                width: 100% !important; /* Barra completa de lado a lado del teléfono */
+                display: block !important;
+            }
+        }
+
+
+        /* 🚀 DISEÑO DE INTERFAZ PARA "MI PERFIL" */
+        .profile-layout-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        .profile-avatar-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            height: fit-content;
+        }
+        .avatar-frame-container {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: 2px solid var(--border-window);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            background: #12141d;
+            margin-bottom: 1.25rem;
+            transition: border-color 0.2s;
+        }
+        .avatar-frame-container:hover { border-color: var(--success); }
+        .avatar-frame-container img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .avatar-overlay-hover {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: rgba(0, 0, 0, 0.75); color: #fff; font-size: 0.7rem;
+            font-weight: 600; padding: 0.35rem 0; text-transform: uppercase;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .avatar-frame-container:hover .avatar-overlay-hover { opacity: 1; }
+
+        .profile-avatar-card h4 { font-family: 'Syne', sans-serif; font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .profile-role-badge { background: rgba(52, 211, 153, 0.1); color: var(--success); padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(52, 211, 153, 0.15); }
+        
+        .profile-data-blocks { display: flex; flex-direction: column; gap: 1rem; }
+        .data-block-card { background: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.02); border-radius: 16px; padding: 1.5rem; }
+        .data-block-card h5 { font-family: 'Syne', sans-serif; font-size: 0.9rem; color: var(--text-labels); margin-bottom: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .data-block-card p { font-size: 0.875rem; margin-bottom: 0.6rem; color: rgba(255,255,255,0.8); }
+        .data-block-card p:last-child { margin-bottom: 0; }
+        
+        .profile-badges-container { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+        @media (max-width: 768px) {
+            .profile-layout-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            #profileWindow { height: auto !important; }
+        }
+
+        /* 🎵 REJILLA UNIFICADA Y MATEMÁTICA PARA EL SETLIST (REEMPLAZO) */
+.setlist-header-row, .song-track-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 1rem 0.75rem !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+    gap: 1.5rem !important;
+}
+
+.setlist-header-row {
+    color: var(--text-labels);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.04) !important;
+}
+
+/* 📐 CONTROL PRECISO DE COLUMNAS HORIZONTALES */
+.col-title-zone {
+    flex: 1.5 !important;      /* Ocupa el espacio del título de la canción */
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.col-pdf-zone {
+    width: 120px !important;    /* Espacio exacto bloqueado para el PDF de acordes */
+    text-align: center !important;
+    flex-shrink: 0 !important;
+    display: flex;
+    justify-content: center;
+}
+
+.col-lyrics-zone {
+    width: 120px !important;    /* Espacio exacto bloqueado para el PDF de letra */
+    text-align: center !important;
+    flex-shrink: 0 !important;
+    display: flex;
+    justify-content: center;
+}
+
+.col-audio-zone {
+    width: 320px !important;    /* Espacio óptimo expandido para el reproductor nativo */
+    text-align: center !important;
+    flex-shrink: 0 !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 📊 ESTILIZADO DEL REPRODUCTOR COMPACTO */
+.col-audio-zone audio {
+    width: 100% !important;
+    height: 30px !important;
+    border-radius: 8px !important;
+    outline: none;
+}
+
+/* 📱 RESPONSIVIDAD INTELIGENTE PARA CELULARES (IPHONE / ANDROID) */
+@media (max-width: 768px) {
+    .setlist-header-row {
+        display: none !important; /* Oculta la cabecera en pantallas móviles */
+    }
+
+    .song-track-item {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        background: rgba(255, 255, 255, 0.01) !important;
+        border: 1px solid rgba(255, 255, 255, 0.03) !important;
+        border-radius: 16px !important;
+        padding: 1.25rem !important;
+        margin-bottom: 0.75rem !important;
+        gap: 1rem !important;
+        width: 100% !important;
+    }
+
+    .col-title-zone {
+        width: 100% !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
+        padding-bottom: 0.5rem !important;
+    }
+
+    .col-pdf-zone, .col-lyrics-zone {
+        width: 100% !important;
+        justify-content: flex-start !important;
+    }
+
+    .col-audio-zone {
+        width: 100% !important;
+        margin-top: 0.25rem !important;
+    }
+}
+
+    </style>
+</head>
+<body>
+
+    <div class="top-navbar">
+        <div class="nav-brand">CHRONOS</div>
+        <div class="nav-profile">
+            <button id="btnToggleProfileView" class="user-tag" style="cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 0.5rem;">
+                👤 <span id="userTagDisplay">Cargando perfil...</span>
+            </button>
+            <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div class="portal-container">
+        
+        <div class="panel-window">
+            <h3>Servicios</h3>
+            <div class="scrollable-list" id="servicesContainer">
+                <div class="empty-workspace-state">Cargando cronogramas desde la nube...</div>
+            </div>
+        </div>
+
+        <div class="panel-window" id="profileWindow" style="display: none; height: calc(100vh - 180px); overflow-y: auto;">
+            <h3>Mi Perfil</h3>
+            <p style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 1.5rem;">Gestiona tu avatar y revisa el estatus de tu crecimiento e información en la iglesia.</p>
+            
+            <div class="profile-layout-grid">
+                <div class="profile-avatar-card">
+                    <div class="avatar-frame-container" onclick="document.getElementById('inputProfilePicFile').click()">
+                        <img id="imgProfileDisplay" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238e95a5'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5-3.33-8-3.33z'/></svg>" alt="Foto de perfil">
+                        <div class="avatar-overlay-hover">🔄 Cambiar</div>
+                    </div>
+                    <input type="file" id="inputProfilePicFile" accept="image/*" style="display: none;">
+                    <h4 id="txtProfileNameTitle">Cargando...</h4>
+                    <span class="profile-role-badge" id="txtProfileAreaBadge">Voluntario</span>
+                </div>
+
+                <div class="profile-data-blocks">
+                    <div class="data-block-card">
+                        <h5>Datos Generales</h5>
+                        <p><strong>Teléfono:</strong> <span id="lblProfPhone">N/A</span></p>
+                        <p><strong>Dirección:</strong> <span id="lblProfAddress">N/A</span></p>
+                        <p><strong>Nacimiento:</strong> <span id="lblProfBirth">N/A</span></p>
+                    </div>
+
+                    <div class="data-block-card">
+                        <h5>Liderazgo y Cobertura</h5>
+                        <p><strong>Líder / Mentor Directo:</strong> <span id="lblProfMentor">Sin asignar</span></p>
+                        <p><strong>Área de Operación:</strong> <span id="lblProfArea">Solo Miembro</span></p>
+                        <p id="profInstrumentRow" style="display: none; margin-top: 0.6rem;"><strong>Instrumento / Rol:</strong> <span id="lblProfInstrument" style="color: #34d399; font-weight: 600;">—</span></p>
+                    </div>
+
+                    <div class="data-block-card">
+                        <h5>Estatus del Proceso Espiritual</h5>
+                        <div class="profile-badges-container" id="profileBadgesTarget">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-window" id="workspaceWindow">
+            <div class="empty-workspace-state">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.4; margin-bottom:0.5rem;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                Selecciona un servicio de la lista izquierda para desplegar la Suite de Ensayo y Horarios.
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+        import { auth, db } from "./firebase-config.js";
+        import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { collection, query, getDocs, orderBy, onSnapshot, doc, getDoc, updateDoc, where } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        // Inicializar el motor de almacenamiento de fotos
+        const storage = getStorage();
+
+        let selectedServiceId = null;
+        let cachedServices = {};
+        window.selectedServiceId = null;
+
+        const servicesContainer = document.getElementById('servicesContainer');
+        const workspaceWindow = document.getElementById('workspaceWindow');
+        const userTagDisplay = document.getElementById('userTagDisplay');
+
+        // ==================== CONTROL DE AUTENTICACIÓN Y CARGA DE DATOS ====================
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                console.log("Usuario autenticado:", user.email);
+                
+                const emailClean = user.email.split('@')[0].toUpperCase();
+                const userTagDisplay = document.getElementById('userTagDisplay');
+                if (userTagDisplay) {
+                    userTagDisplay.innerText = emailClean; // 🌟 Dejo solo el usuario limpio arriba
+                }
+
+                const emailUsuario = user.email.toLowerCase().trim();
+
+                try {
+                    const qEmail = query(collection(db, "people"), where("email", "==", emailUsuario));
+                    const querySnapshotEmail = await getDocs(qEmail);
+
+                    if (!querySnapshotEmail.empty) {
+                        const personaData = querySnapshotEmail.docs[0].data();
+
+                        if (document.getElementById('txtProfileNameTitle')) {
+                            document.getElementById('txtProfileNameTitle').innerText = personaData.fullName || 'Voluntario';
+                        }
+                        if (document.getElementById('txtProfileAreaBadge')) {
+                            document.getElementById('txtProfileAreaBadge').innerText = personaData.serviceArea || 'Voluntario';
+                        }
+                        if (document.getElementById('lblProfPhone')) {
+                            document.getElementById('lblProfPhone').innerText = personaData.phone || 'N/A';
+                        }
+                        if (document.getElementById('lblProfAddress')) {
+                            document.getElementById('lblProfAddress').innerText = personaData.address || 'N/A';
+                        }
+                        if (document.getElementById('lblProfArea')) {
+                            document.getElementById('lblProfArea').innerText = personaData.serviceArea || 'Solo Miembro';
+                        }
+                        if (document.getElementById('lblProfMentor')) {
+                            document.getElementById('lblProfMentor').innerText = personaData.mentorLeader || 'Sin asignar';
+                        }
+                        
+                        // 🎸 SINCRONIZACIÓN EXCLUSIVA PARA LA TARJETA DE ABAJO
+                        const rowInst = document.getElementById('profInstrumentRow');
+                        const lblInst = document.getElementById('lblProfInstrument');
+                        if (personaData.serviceArea === 'Alabanza' && personaData.instrument) {
+                            if (lblInst) lblInst.innerText = personaData.instrument;
+                            if (rowInst) rowInst.style.display = 'block';
+                        } else {
+                            if (rowInst) rowInst.style.display = 'none';
+                        }
+                        
+                        if (personaData.birthDate && document.getElementById('lblProfBirth')) {
+                            const pts = personaData.birthDate.split('-');
+                            document.getElementById('lblProfBirth').innerText = pts.length === 3 ? `${pts[2]}/${pts[1]}/${pts[0]}` : personaData.birthDate;
+                        }
+                        
+                        if (personaData.avatar && document.getElementById('imgProfileDisplay')) {
+                            document.getElementById('imgProfileDisplay').src = personaData.avatar;
+                        }
+
+                        const badgesTarget = document.getElementById('profileBadgesTarget');
+                        if (badgesTarget) {
+                            badgesTarget.innerHTML = `
+                                <span class="badge ${personaData.isBaptized ? 'success' : 'neutral'}">¿Bautizado?: ${personaData.isBaptized ? 'SÍ ✓' : 'NO'}</span>
+                                <span class="badge ${personaData.inFriendshipGroup ? 'success' : 'neutral'}">¿Grupo Amistad?: ${personaData.inFriendshipGroup ? 'SÍ ✓' : 'NO'}</span>
+                                <span class="badge ${personaData.hasADL ? 'success' : 'neutral'}">¿ADL?: ${personaData.hasADL ? 'SÍ ✓' : 'NO'}</span>
+                                <span class="badge ${personaData.hasEncounter ? 'success' : 'neutral'}">¿Encuentro?: ${personaData.hasEncounter ? 'SÍ ✓' : 'NO'}</span>
+                            `;
+                        }
+
+                        console.log("Ficha técnica vinculada con éxito para:", personaData.fullName);
+                    } else {
+                        console.warn("No se encontró una ficha técnica en 'people' para este correo:", user.email);
+                        if (document.getElementById('txtProfileNameTitle')) {
+                            document.getElementById('txtProfileNameTitle').innerText = user.email.split('@')[0].toUpperCase();
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error al conectar con la base de datos 'people':", error);
+                }
+
+            } else {
+                window.location.href = '/index.html';
+            }
+        });
+
+
+async function obtenerEstadoEncargado(nombreCompleto) {
+            try {
+                const { collection, query, where, getDocs } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js");
+                const q = query(collection(db, "people"), where("fullName", "==", nombreCompleto));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    let esLider = false;
+                    querySnapshot.forEach((doc) => {
+                        if (doc.data().isAreaLeader === true) {
+                            esLider = true;
+                        }
+                    });
+                    return esLider;
+                }
+                return false;
+            } catch (error) {
+                console.error("Error validando líder:", error);
+                return false;
+            }
+        }
+
+        // 🌟 FUNCIÓN AUXILIAR: Enciende o apaga visualmente tus badges en base a los booleanos (true/false)
+        function actualizarBadgeVisual(idElemento, completado) {
+            const elemento = document.getElementById(idElemento);
+            if (!elemento) return;
+            
+            if (completado) {
+                elemento.classList.add('active');
+                elemento.style.opacity = "1";
+                elemento.style.filter = "none";
+            } else {
+                elemento.classList.remove('active');
+                elemento.style.opacity = "0.25";
+                elemento.style.filter = "grayscale(100%)";
+            }
+        }
+
+       // Escucha activa de los cultos programados con Formato Guatemala (Líneas 198 - 229)
+        const qServices = query(collection(db, "services"), orderBy("date", "asc"));
+        onSnapshot(qServices, (snapshot) => {
+            servicesContainer.innerHTML = "";
+            cachedServices = {};
+
+            if(snapshot.empty) {
+                servicesContainer.innerHTML = `<div class="empty-workspace-state">No hay servicios programados en el calendario.</div>`;
+                return;
+            }
+
+            snapshot.forEach((docSnap) => {
+                const id = docSnap.id;
+                const service = docSnap.data();
+                cachedServices[id] = service;
+
+                // 📅 1. Convertir fecha a formato Guatemala (DD/MM/AAAA)
+                let fechaListaGuatemala = 'N/A';
+                if (service.date && service.date.includes('-')) {
+                    const partes = service.date.split('-');
+                    if (partes.length === 3) {
+                        fechaListaGuatemala = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                    }
+                } else {
+                    fechaListaGuatemala = service.date || 'N/A';
+                }
+
+                // ⏰ 2. Convertir hora a formato 12 Horas de Guatemala (AM/PM)
+                let horaListaGuatemala = 'N/A';
+                if (service.time) {
+                    const [horas, minutos] = service.time.split(':').map(Number);
+                    const periodo = horas >= 12 ? 'PM' : 'AM';
+                    const horas12 = horas % 12 === 0 ? 12 : horas % 12;
+                    const minutosFormateados = minutos < 10 ? `0${minutos}` : minutos;
+                    horaListaGuatemala = `${horas12}:${minutosFormateados} ${periodo}`;
+                }
+
+                const item = document.createElement('div');
+                item.className = `service-item ${id === selectedServiceId ? 'active' : ''}`;
+                item.innerHTML = `
+                    <div class="service-info">
+                        <h5>${service.title}</h5>
+                        <p>Reunión General</p>
+                    </div>
+                    <div class="service-meta">
+                        <div>${fechaListaGuatemala}</div>
+                        <div class="service-time">${horaListaGuatemala}</div>
+                    </div>
+                `;
+
+                item.addEventListener('click', () => {
+                    selectedServiceId = id;
+                    window.selectedServiceId = id; // Asignación en click manual
+                    document.querySelectorAll('.service-item').forEach(el => el.classList.remove('active'));
+                    item.classList.add('active');
+                    renderizarSuiteDeServicio(service);
+                });
+
+                servicesContainer.appendChild(item);
+
+                // Si es la carga inicial automática o una actualización en vivo del culto seleccionado
+                if(id === selectedServiceId) {
+                    window.selectedServiceId = id; // 🌟 FIJACIÓN EXPLICITA: Forzamos el ID global al cargar la página en automático
+                    renderizarSuiteDeServicio(service);
+                }
+            });
+        });
+
+        // RENDERIZAR LA INTERFAZ COMPLETA DE TRABAJO (WORKSPACE)
+        function renderizarSuiteDeServicio(service) {
+            workspaceWindow.innerHTML = `
+                <div class="work-workspace">
+                    <div>
+                        <h3 style="margin-bottom:0.5rem; font-family:'Syne'; font-size:1.4rem;">${service.title}</h3>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1.5rem;">Panel de Preparación y Ensayos</p>
+                        
+                        <div class="tabs-nav">
+                            <button class="tab-btn active" id="btn-tab-escaleta">Horario</button>
+                            <button class="tab-btn" id="btn-tab-setlist">Setlist Músicos</button>
+                            <button class="tab-btn" id="btn-tab-bosquejo">Bosquejo</button>
+                        </div>
+
+                       <div id="tab-content-escaleta" class="tab-content active">
+                            <table class="plan-table" style="width:100%; border-collapse:collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 25%;">Horario</th>
+                                        <th style="width: 50%;">Elemento de Orden</th>
+                                        <th style="text-align:right; width: 25%;">Duración</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="planContainerMiembros"></tbody>
+                            </table>
+                        </div>
+
+                       <div id="tab-content-setlist" class="tab-content">
+                            <div class="setlist-header-row">
+                                <div class="col-title-zone">Canción / Título</div>
+                                <div class="col-pdf-zone">Cifrado</div>
+                                <div class="col-audio-zone">Audio</div>
+                            </div>
+                            <div id="songsContainerMiembros"></div>
+                        </div>
+
+                        <div id="tab-content-bosquejo" class="tab-content">
+                            <div class="sketch-box" id="sketchContainerMiembros"></div>
+                        </div>
+                    </div>
+
+                    <div class="team-section" style="max-height: calc(100vh - 180px); overflow-y: auto;">
+                        <h4 style="font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; color: var(--text-main); margin-bottom: 0.5rem;">EQUIPO EN SERVICIO</h4>
+                        <p style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.02em;">Lineup de Servidores Asignados</p>
+                        <div id="teamContainerMiembros" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                    </div>
+                </div>
+            `;
+
+            // Inyectar datos en Escaleta
+            const planContainer = document.getElementById('planContainerMiembros');
+            const plan = service.plan || [];
+            
+            if(plan.length === 0) {
+                planContainer.innerHTML = `<tr><td colspan="3" style="color:var(--text-muted); text-align:center; padding:2rem;">El administrador no ha añadido bloques cronometrados aún.</td></tr>`;
+            } else {
+                planContainer.innerHTML = "";
+                
+                // Extraer hora base del servicio (Ej: "18:00")
+                let [horas, minutos] = (service.time || "18:00").split(":").map(Number);
+                let servicioBaseRef = new Date();
+                servicioBaseRef.setHours(horas, minutos, 0, 0);
+
+                plan.forEach((item, index) => {
+                    let duracionMinutos = Number(item.duration || 0);
+                    
+                    // Clonar y calcular rangos para este paso específico
+                    let horaInicioPaso = new Date(servicioBaseRef.getTime());
+                    servicioBaseRef.setMinutes(servicioBaseRef.getMinutes() + duracionMinutos);
+                    let horaFinPaso = new Date(servicioBaseRef.getTime());
+
+                    // Formatear cadenas legibles (HH:MM)
+                    let stringInicio = horaInicioPaso.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    let stringFin = horaFinPaso.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+                    // Determinar el estado actual en tiempo real contrastando con el reloj del cliente
+                    let ahora = new Date();
+                    let claseFila = "";
+                    let etiquetaEstado = "";
+
+                    if (ahora >= horaInicioPaso && ahora < horaFinPaso) {
+                        claseFila = "live-now";
+                        etiquetaEstado = `<span class="live-badge"><span style="animation: pulse 1.5s infinite; width:6px; height:6px; background:var(--success); border-radius:50%; display:inline-block;"></span> EN VIVO</span>`;
+                    } else if (ahora >= horaFinPaso) {
+                        claseFila = "past-item";
+                    }
+
+                    planContainer.insertAdjacentHTML('beforeend', `
+                        <tr class="plan-row ${claseFila}">
+                            <td class="time-range-display">
+                                ${stringInicio} - ${stringFin}
+                            </td>
+                            <td>
+                                <strong style="font-size:0.9rem;">${item.title}</strong>
+                                ${etiquetaEstado ? '<div style="margin-top:0.25rem;">' + etiquetaEstado + '</div>' : ''}
+                            </td>
+                            <td style="text-align:right;" class="plan-duration">
+                                ${duracionMinutos} min
+                            </td>
+                        </tr>
+                    `);
+                });
+            }
+
+           // Inyectar datos en Setlist con validación de recursos de Firebase Storage
+            const songsContainer = document.getElementById('songsContainerMiembros');
+            const setlist = service.setlist || [];
+            
+            if(setlist.length === 0) {
+                songsContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:2.5rem 1rem;">No hay canciones asignadas para este servicio.</p>`;
+            } else {
+                songsContainer.innerHTML = "";
+                
+                setlist.forEach((song, idx) => {
+                    // Botón para disparar el PDF unificado de Acordes + Letras
+                    let btnPdf = song.pdf ? `<button onclick="abrirVisorPdfInterno('${song.pdf}', '${song.title} - Acordes & Letra')" class="btn-mini-resource">Acordes.pdf</button>` : `<span style="color:rgba(255,255,255,0.03); font-size:0.75rem;">—</span>`;
+                    
+                    // Si no contiene audio, dejamos la línea de control vacía simétrica
+                    let audioTrigger = `<span style="color:rgba(255,255,255,0.03); font-size:0.75rem;">—</span>`;
+                    if(song.audio) {
+                        audioTrigger = `<audio id="audio-track-${idx}" controls src="${song.audio}"></audio>`;
+                    }
+
+                    // 🌟 INYECCIÓN DE 3 COLUMNAS PURIFICADAS
+                    songsContainer.insertAdjacentHTML('beforeend', `
+                        <div class="song-track-item">
+                            <div class="col-title-zone">
+                                <span class="song-track-key">${song.key}</span>
+                                <span class="song-track-title">${song.title}</span>
+                            </div>
+                            
+                            <div class="col-pdf-zone">${btnPdf}</div>
+                            
+                            <div class="col-audio-zone">${audioTrigger}</div>
+                        </div>
+                    `);
+
+                    // GESTIÓN MULTIPISTA
+                    const currentAudio = document.getElementById(`audio-track-${idx}`);
+                    if (currentAudio) {
+                        currentAudio.addEventListener('play', () => {
+                            document.querySelectorAll('audio').forEach(aud => {
+                                if (aud.id !== `audio-track-${idx}`) {
+                                    aud.pause();
+                                    aud.currentTime = 0;
+                                }
+                            });
+                        });
+                    }
+                });
+            }
+
+            // Inyectar datos en Bosquejo Pastoral
+            const sketchContainer = document.getElementById('sketchContainerMiembros');
+            if(service.sketch) {
+                sketchContainer.innerText = service.sketch;
+            } else {
+                sketchContainer.innerHTML = `<span style="color:var(--text-muted); font-style:italic;">No hay directrices ni bosquejos redactados para este día.</span>`;
+            }
+
+          // 🌟 MOTOR DE RENDERIZADO CORREGIDO CON MAPEO FIEL DE IMAGENES ('avatar')
+            const teamContainer = document.getElementById('teamContainerMiembros');
+            if (teamContainer) {
+                teamContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.8rem; text-align:center; padding:1rem;">Cargando lineup por grupos...</p>`;
+                const rolesGuardados = service.roles || {};
+                const entradasRoles = Object.entries(rolesGuardados);
+
+                if (entradasRoles.length === 0) {
+                    teamContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.8rem; text-align:center; padding:2rem 1rem; border: 1px dashed rgba(255,255,255,0.05); border-radius:12px;">Ningún servidor asignado a este culto todavía.</p>`;
+                } else {
+                    teamContainer.innerHTML = ""; 
+
+                    const procesarEquipoPorGrupos = async () => {
+                        const gruposAreas = {};
+
+                        // 1. Clasificar y recuperar datos exactos desde la colección 'people' de Firestore
+                        for (const [puestoKey, asignadoValue] of entradasRoles) {
+                            let nombreVoluntario = asignadoValue;
+                            let funcionEspecifica = puestoKey;
+
+                            if (asignadoValue && asignadoValue.includes('__')) {
+                                const partes = asignadoValue.split('__');
+                                nombreVoluntario = partes[0];
+                                funcionEspecifica = partes[1]; // 🌟 Captura exacta (Ej: "Piano 2")
+                            }
+
+                            if (nombreVoluntario && nombreVoluntario !== 'Sin asignar') {
+                                let areaDelVoluntario = "Otros";
+                                let esEncargado = false;
+                                let fotoPerfilUrl = ""; 
+
+                                try {
+                                    const q = query(collection(db, "people"), where("fullName", "==", nombreVoluntario));
+                                    const querySnapshot = await getDocs(q);
+                                    if (!querySnapshot.empty) {
+                                        querySnapshot.forEach((docSnap) => {
+                                            const datosFieles = docSnap.data();
+                                            areaDelVoluntario = datosFieles.serviceArea || "Miembro";
+                                            esEncargado = datosFieles.isAreaLeader === true;
+                                            fotoPerfilUrl = datosFieles.avatar || "";
+                                            
+                                            // 🌟 SE ELIMINÓ TODO EL BLOQUE INTERNO QUE ESTABA CORROMPIDO Y SOBREESCRIBÍA "Director"
+                                        });
+                                    }
+                                } catch (err) {
+                                    console.error("Error al recuperar datos del voluntario:", err);
+                                }
+
+                                if (!gruposAreas[areaDelVoluntario]) {
+                                    gruposAreas[areaDelVoluntario] = [];
+                                }
+
+                                gruposAreas[areaDelVoluntario].push({
+                                    nombre: nombreVoluntario,
+                                    funcion: funcionEspecifica, // Pasa la etiqueta real de la base de datos
+                                    lider: esEncargado,
+                                    foto: fotoPerfilUrl
+                                });
+                            }
+                        }
+
+                        // DEFINICIÓN DEL ORDEN ESTRICTO DE LOS GRUPOS SOLICITADO
+                        const ordenDefinidoAreas = [
+                            "Pastor",
+                            "Alabanza",
+                            "Multimedia",
+                            "Audio",
+                            "Logística",
+                            "Tv",
+                            "Niños"
+                        ];
+
+                        const areasParaRenderizar = ordenDefinidoAreas.filter(area => gruposAreas[area] && gruposAreas[area].length > 0);
+                        
+                        Object.keys(gruposAreas).forEach(area => {
+                            if (!ordenDefinidoAreas.includes(area) && gruposAreas[area].length > 0) {
+                                areasParaRenderizar.push(area);
+                            }
+                        });
+
+                        if (areasParaRenderizar.length === 0) {
+                            teamContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.8rem; text-align:center; padding:2rem 1rem; border: 1px dashed rgba(255,255,255,0.05); border-radius:12px;">Ningún servidor asignado a este culto todavía.</p>`;
+                            return;
+                        }
+
+                        // 2. Pintar los bloques de Grupos respetando la jerarquía solicitada
+                        areasParaRenderizar.forEach((area) => {
+                            const listaIntegrantes = gruposAreas[area];
+
+                            // DOBLE FILTRO DE ORDENACIÓN INTERNA: Encargados siempre arriba; el resto por orden alfabético
+                            listaIntegrantes.sort((a, b) => {
+                                if (a.lider && !b.lider) return -1; 
+                                if (!a.lider && b.lider) return 1;  
+                                return a.nombre.localeCompare(b.nombre); 
+                            });
+
+                            let nombreEncabezado = area;
+                            if (area.toLowerCase() === "logistica" || area.toLowerCase() === "logística") nombreEncabezado = "Logística / Servidores";
+                            if (area.toLowerCase() === "niños") nombreEncabezado = "Ministerio de Niños";
+                            if (area.toLowerCase() === "alabanza") nombreEncabezado = "Alabanza";
+
+                            teamContainer.insertAdjacentHTML('beforeend', `
+                                <div class="area-group-header" style="margin-top: 1.2rem; margin-bottom: 0.5rem; padding-left: 0.25rem; border-left: 2px solid rgba(255,255,255,0.15);">
+                                    <span style="font-family: 'Syne', sans-serif; font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">${nombreEncabezado.toUpperCase()}</span>
+                                </div>
+                            `);
+
+                            // Inyectar cada servidor con su avatar lateral y su etiqueta dorada dinámica
+                            listaIntegrantes.forEach(servidor => {
+                                let cardStyle = "background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03);";
+                                let badgeStyle = "color: var(--text-labels); background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08);";
+                                
+                                // Nombre limpio del voluntario sin emojis
+                                let nombreFinal = servidor.nombre; 
+
+                                // 🌟 RESALTADO EN COLOR DORADO PREMIUM PARA EL LÍDER (Sigue flotando arriba)
+                                if (servidor.lider === true) {
+                                    cardStyle = "background: rgba(212, 163, 89, 0.04) !important; border: 1px solid rgba(212, 163, 89, 0.25) !important; box-shadow: inset 0 0 12px rgba(212, 163, 89, 0.02);";
+                                    badgeStyle = "color: #08090d !important; background: linear-gradient(135deg, #f3d081 0%, #d4a359 100%) !important; border: 1px solid #f3d081 !important; font-weight: 700; box-shadow: 0 2px 8px rgba(212, 163, 89, 0.2);";
+                                }
+
+                                // SVG Nativo seguro en texto plano para los avatares por defecto
+                                const imagenFinal = servidor.foto ? servidor.foto : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238e95a5'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5-3.33-8-3.33z'/></svg>";
+
+                                teamContainer.insertAdjacentHTML('beforeend', `
+                                    <div class="people-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.8rem; border-radius: 10px; gap: 0.75rem; margin-bottom: 0.3rem; transition: all 0.2s ease; ${cardStyle}">
+                                        
+                                        <div style="display: flex; align-items: center; gap: 0.65rem; min-width: 0; flex: 1;">
+                                            <img src="${imagenFinal}" alt="Profile" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;">
+                                            <span class="person-name" style="font-size: 0.85rem; font-weight: 600; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${nombreFinal}</span>
+                                        </div>
+
+                                        <span class="person-role" style="font-size: 0.7rem; font-weight: 600; padding: 0.3rem 0.6rem; border-radius: 6px; white-space: nowrap; max-width: 130px; overflow: hidden; text-overflow: ellipsis; text-transform: capitalize; ${badgeStyle}">
+                                            ${servidor.funcion}
+                                        </span>
+
+                                    </div>
+                                `);
+                            });
+                        });
+                    };
+
+                    procesarEquipoPorGrupos();
+                }
+            }
+
+            configurarManejadorPestañas();
+        }
+
+        // Esta función queda como herencia nativa por si algún otro componente la llama
+        function agregarFilaEquipo(container, nombre, puesto) {
+            container.insertAdjacentHTML('beforeend', `
+                <div class="people-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 10px; gap: 0.5rem; transition: background 0.2s;">
+                    <span class="person-name" style="font-size: 0.85rem; font-weight: 600; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">${nombre}</span>
+                    <span class="person-role" style="font-size: 0.725rem; color: var(--success); font-weight: 600; background: rgba(52, 211, 153, 0.06); padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid rgba(52, 211, 153, 0.12); text-transform: capitalize; white-space: nowrap;">${puesto}</span>
+                </div>
+            `);
+        }
+
+        function configurarManejadorPestañas() {
+            const tabs = ['escaleta', 'setlist', 'bosquejo'];
+            tabs.forEach(tab => {
+                document.getElementById(`btn-tab-${tab}`).addEventListener('click', () => {
+                    tabs.forEach(t => {
+                        document.getElementById(`btn-tab-${t}`).classList.remove('active');
+                        document.getElementById(`tab-content-${t}`).classList.remove('active');
+                    });
+                    document.getElementById(`btn-tab-${tab}`).classList.add('active');
+                    document.getElementById(`tab-content-${tab}`).classList.add('active');
+                });
+            });
+        }
+
+        // 🌟 LOGOUT DE SESIÓN OPTIMIZADO Y SEGURO
+        document.getElementById('btnLogout').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error("Error al cerrar sesión:", error);
+            }
+        });
+
+
+
+        // 🌟 FUNCIONES GLOBALES PARA EL VISOR DE PDF INTERNO
+       window.abrirVisorPdfInterno = function(url, titulo) {
+            const modal = document.getElementById('pdfModalInternal');
+            const frame = document.getElementById('pdfInternalFrame');
+            const titleDisplay = document.getElementById('pdfModalTitle');
+            
+            titleDisplay.innerText = titulo.toUpperCase();
+            frame.src = url; // Asignar la URL del archivo de Firebase Storage
+            
+            // Animación fluida de apertura
+            modal.style.opacity = "1";
+            modal.style.pointerEvents = "auto";
+        };
+
+
+        // ==========================================
+        // MOTOR LÓGICO DE "MI PERFIL ESPIRITUAL"
+        // ==========================================
+        const btnToggleProfile = document.getElementById('btnToggleProfileView');
+        const profileWindow = document.getElementById('profileWindow');
+        const mainPortalContainer = document.querySelector('.portal-container');
+        let currentConnectedUserEmail = "";
+
+        // Intercambiador de Vistas: Oculta la Suite y abre Perfil
+        if (btnToggleProfile) {
+            btnToggleProfile.addEventListener('click', () => {
+                if (profileWindow.style.display === 'none') {
+                    // Ocultamos el workspace y la lista lateral, mostramos Perfil completo
+                    document.getElementById('servicesContainer').parentElement.style.display = 'none';
+                    workspaceWindow.style.display = 'none';
+                    profileWindow.style.display = 'block';
+                    mainPortalContainer.style.gridTemplateColumns = "1fr"; // Pantalla limpia
+                    btnToggleProfile.style.background = "var(--success)";
+                    btnToggleProfile.style.color = "#000000";
+                    cargarDatosEnPantallaPerfil();
+                } else {
+                    // Restauramos el panel original de itinerarios
+                    document.getElementById('servicesContainer').parentElement.style.display = 'flex';
+                    workspaceWindow.style.display = 'block';
+                    profileWindow.style.display = 'none';
+                    mainPortalContainer.style.gridTemplateColumns = "320px 1fr";
+                    btnToggleProfile.style.background = "rgba(255, 255, 255, 0.03)";
+                    btnToggleProfile.style.color = "var(--text-muted)";
+                }
+            });
+        }
+
+        // Detectar datos del perfil del voluntario desde Firestore
+        async function cargarDatosEnPantallaPerfil() {
+            if (!auth.currentUser) return;
+            
+            const emailUsuario = auth.currentUser.email.toLowerCase().trim();
+            const emailClean = auth.currentUser.email.split('@')[0].toUpperCase();
+            
+            const qEmailLive = query(collection(db, "people"), where("email", "==", emailUsuario));
+            
+            onSnapshot(qEmailLive, (snapshot) => {
+                const navbarTag = document.getElementById('userTagDisplay');
+
+                if (!snapshot.empty) {
+                    const voluntarioEncontrado = snapshot.docs[0].data();
+
+                    document.getElementById('txtProfileNameTitle').innerText = voluntarioEncontrado.fullName || 'Voluntario';
+                    document.getElementById('txtProfileAreaBadge').innerText = voluntarioEncontrado.serviceArea || "Miembro";
+                    document.getElementById('lblProfPhone').innerText = voluntarioEncontrado.phone || "N/A";
+                    document.getElementById('lblProfAddress').innerText = voluntarioEncontrado.address || "N/A";
+                    document.getElementById('lblProfArea').innerText = voluntarioEncontrado.serviceArea || "Solo Miembro";
+                    document.getElementById('lblProfMentor').innerText = voluntarioEncontrado.mentorLeader || "Sin asignar";
+                    
+                    // 🌟 REGLA EXCLUSIVA ABAJO: El navbar superior se mantiene limpio con el nombre base
+                    const rowInst = document.getElementById('profInstrumentRow');
+                    const lblInst = document.getElementById('lblProfInstrument');
+                    
+                    if (voluntarioEncontrado.serviceArea === 'Alabanza' && voluntarioEncontrado.instrument) {
+                        if (lblInst) lblInst.innerText = voluntarioEncontrado.instrument;
+                        if (rowInst) rowInst.style.display = 'block';
+                    } else {
+                        if (rowInst) rowInst.style.display = 'none';
+                    }
+                    
+                    if (navbarTag) navbarTag.innerText = emailClean; // 🌟 Siempre limpio arriba
+                    
+                    if(voluntarioEncontrado.birthDate) {
+                        const pts = voluntarioEncontrado.birthDate.split('-');
+                        document.getElementById('lblProfBirth').innerText = pts.length === 3 ? `${pts[2]}/${pts[1]}/${pts[0]}` : voluntarioEncontrado.birthDate;
+                    }
+
+                    if (voluntarioEncontrado.avatar) {
+                        document.getElementById('imgProfileDisplay').src = voluntarioEncontrado.avatar;
+                    }
+
+                    const badgesTarget = document.getElementById('profileBadgesTarget');
+                    if (badgesTarget) {
+                        badgesTarget.innerHTML = `
+                            <span class="badge ${voluntarioEncontrado.isBaptized ? 'success' : 'neutral'}">¿Bautizado?: ${voluntarioEncontrado.isBaptized ? 'SÍ ✓' : 'NO'}</span>
+                            <span class="badge ${voluntarioEncontrado.inFriendshipGroup ? 'success' : 'neutral'}">¿Grupo Amistad?: ${voluntarioEncontrado.inFriendshipGroup ? 'SÍ ✓' : 'NO'}</span>
+                            <span class="badge ${voluntarioEncontrado.hasADL ? 'success' : 'neutral'}">¿ADL?: ${voluntarioEncontrado.hasADL ? 'SÍ ✓' : 'NO'}</span>
+                            <span class="badge ${voluntarioEncontrado.hasEncounter ? 'success' : 'neutral'}">¿Encuentro?: ${voluntarioEncontrado.hasEncounter ? 'SÍ ✓' : 'NO'}</span>
+                        `;
+                    }
+                } else {
+                    document.getElementById('txtProfileNameTitle').innerText = emailClean;
+                    if (navbarTag) navbarTag.innerText = emailClean;
+                }
+            });
+        }
+
+        // 🖼️ CAPTURAR IMAGEN Y SUBIRLA EN TIEMPO REAL A FIREBASE STORAGE
+        const inputFile = document.getElementById('inputProfilePicFile');
+        if (inputFile) {
+            inputFile.addEventListener('change', async (e) => {
+                const archivo = e.target.files[0];
+                if (!archivo || !auth.currentUser) return;
+
+                const emailUsuarioConectado = auth.currentUser.email.toLowerCase().trim();
+                const imgDisplay = document.getElementById('imgProfileDisplay');
+                
+                // Efecto visual de carga previa instantánea en el cliente
+                imgDisplay.style.opacity = "0.4";
+
+                try {
+                    // 1. Crear la referencia única en la nube de Storage
+                    const storageRef = ref(storage, `profile_pictures/${auth.currentUser.uid}_${Date.now()}_${archivo.name}`);
+                    
+                    // 2. Ejecutar la subida de los bytes
+                    const snapshot = await uploadBytes(storageRef, archivo);
+                    
+                    // 3. Obtener la URL pública del servidor
+                    const downloadUrl = await getDownloadURL(snapshot.ref);
+
+                    // 4. Buscar el documento correcto en Firestore filtrando por EMAIL de forma segura
+                    const qPersona = query(collection(db, "people"), where("email", "==", emailUsuarioConectado));
+                    const querySnapshotPersona = await getDocs(qPersona);
+
+                    if (!querySnapshotPersona.empty) {
+                        const idDocumentoPersona = querySnapshotPersona.docs[0].id;
+                        
+                        // 🌟 ACTUALIZACIÓN CRÍTICA: Guardamos en el campo exacto 'avatar' de tu base de datos
+                        await updateDoc(doc(db, "people", idDocumentoPersona), {
+                            avatar: downloadUrl
+                        });
+                        console.log("Foto vinculada exitosamente en el campo 'avatar' de Firestore.");
+                    } else {
+                        console.warn("No se encontró ficha en 'people' con el correo:", emailUsuarioConectado);
+                    }
+
+                    // Colocar en pantalla la imagen final con opacidad limpia
+                    imgDisplay.src = downloadUrl;
+                    imgDisplay.style.opacity = "1";
+
+                } catch (error) {
+                    console.error("Error al procesar la subida del avatar:", error);
+                    imgDisplay.style.opacity = "1";
+                }
+            });
+        }
+
+
+        window.cerrarVisorPdfInterno = function() {
+            const modal = document.getElementById('pdfModalInternal');
+            const frame = document.getElementById('pdfInternalFrame');
+            
+            modal.style.opacity = "0";
+            modal.style.pointerEvents = "none";
+            frame.src = ""; // 🌟 Limpiar el iframe para detener audios o descargas en segundo plano
+        };
+        
+
+        // 🌟 CONTROLADOR INTELIGENTE DE AUDIO COMPACTO MULTIPISTA
+        window.toggleCompactAudio = function(index) {
+            const audioElement = document.getElementById(`audio-track-${index}`);
+            const buttonElement = document.getElementById(`play-btn-${index}`);
+            
+            // Pausar cualquier otro audio que se esté reproduciendo actualmente para evitar ruidos cruzados
+            document.querySelectorAll('audio').forEach((aud) => {
+                if(aud.id !== `audio-track-${index}`) {
+                    aud.pause();
+                    aud.currentTime = 0; // Resetear
+                    // Restaurar iconos de los demás botones
+                    const otherBtnId = aud.id.replace('audio-track-', 'play-btn-');
+                    const otherBtn = document.getElementById(otherBtnId);
+                    if(otherBtn) {
+                        otherBtn.innerText = "▶";
+                        otherBtn.classList.remove('playing');
+                    }
+                }
+            });
+
+            // Cambiar estado del audio seleccionado
+            if (audioElement.paused) {
+                audioElement.play();
+                buttonElement.innerText = "⏸";
+                buttonElement.classList.add('playing');
+            } else {
+                audioElement.pause();
+                buttonElement.innerText = "▶";
+                buttonElement.classList.remove('playing');
+            }
+
+            // Si el audio termina, regresar el icono a Play automáticamente
+            audioElement.onended = () => {
+                buttonElement.innerText = "▶";
+                buttonElement.classList.remove('playing');
+            };
+        };
+
+        
+    </script>
+
+    <div id="pdfModalInternal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5, 5, 8, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: flex; flex-direction: column; z-index: 5000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: rgba(18, 20, 29, 0.9); border-bottom: 1px solid var(--border-window);">
+        <h4 id="pdfModalTitle" style="font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: #fff;">Visualizador de Recursos</h4>
+        <button onclick="cerrarVisorPdfInterno()" style="background: rgba(248, 113, 113, 0.15); border: 1px solid rgba(248, 113, 113, 0.2); color: #f87171; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+            ✕ Cerrar Visor
+        </button>
+    </div>
+    <div style="flex: 1; width: 100%; height: 100%; background: #12141d; display: flex; justify-content: center; align-items: center;">
+        <iframe id="pdfInternalFrame" src="" style="width: 100%; height: 100%; border: none;" allow="autoplay"></iframe>
+    </div>
+</div>
+
+
+</body>
+</html>

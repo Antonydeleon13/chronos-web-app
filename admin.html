@@ -1,0 +1,2043 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronos — Panel de Control</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #08090d;
+            --window-bg: rgba(18, 20, 29, 0.65);
+            --text-main: #ffffff;
+            --text-muted: #8e95a5;
+            --text-labels: #94a3b8;
+            --border-window: rgba(255, 255, 255, 0.06);
+            --accent-gradient: linear-gradient(135deg, #ffffff 0%, #a3a3a3 100%);
+            --error: #f87171;
+            --success: #34d399;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 1rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        @media (min-width: 768px) {
+            body { padding: 1.5rem; }
+        }
+
+        body::before {
+            content: ''; position: absolute; width: 800px; height: 800px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.02) 0%, rgba(0,0,0,0) 65%);
+            top: -20%; left: -10%; pointer-events: none; z-index: 0;
+        }
+
+        .dashboard-container { max-width: 1500px; margin: 0 auto; position: relative; z-index: 1; }
+
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 0; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .navbar h2 {
+            font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800;
+            background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        @media (min-width: 768px) {
+            .navbar h2 { font-size: 1.6rem; }
+        }
+
+        /* 🌟 PESTAÑAS RESPONSIVAS */
+        .tabs-nav {
+            display: flex; gap: 0.5rem; margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02); padding-bottom: 0.75rem;
+            overflow-x: auto; -webkit-overflow-scrolling: touch;
+        }
+
+        .tab-btn {
+            background: transparent; border: none; color: var(--text-muted);
+            font-family: 'Syne', sans-serif; font-size: 0.875rem; font-weight: 700;
+            cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        @media (min-width: 768px) {
+            .tab-btn { font-size: 0.95rem; padding: 0.5rem 1rem; gap: 1rem; }
+        }
+
+        .tab-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.02); }
+        .tab-btn.active { color: #050508; background: var(--text-main); }
+
+        /* 🌟 NUEVOS ESTILOS PARA SUBPESTAÑAS (PLANNING CENTER SERVICES) */
+        .subtabs-nav {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.35rem;
+            background: rgba(10, 11, 16, 0.5); padding: 0.25rem; border-radius: 10px;
+            margin-bottom: 1.5rem; border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .subtab-btn {
+            background: transparent; border: none; color: var(--text-muted);
+            font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600;
+            cursor: pointer; padding: 0.5rem; border-radius: 6px; transition: all 0.2s ease;
+            text-align: center;
+        }
+        .subtab-btn:hover { color: var(--text-main); }
+        .subtab-btn.active { color: #ffffff; background: rgba(255, 255, 255, 0.06); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
+
+        .subtab-content { display: none; animation: innerFade 0.3s ease; }
+        .subtab-content.active { display: block; }
+        
+        .form-group textarea { width: 100%; padding: 0.8rem 1rem; background-color: rgba(10, 11, 16, 0.5); border: 1px solid rgba(255, 255, 255, 0.03); border-radius: 12px; color: var(--text-main); font-family: inherit; resize: vertical; min-height: 120px; line-height: 1.5; font-size: 0.85rem; outline: none; }
+        .song-row-item { display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.875rem; }
+        .song-key { 
+    background: rgba(52, 211, 153, 0.1); 
+    color: var(--success); 
+    padding: 0.2rem 0.5rem; 
+    border-radius: 6px; 
+    font-size: 0.75rem; 
+    font-weight: 600; 
+    text-transform: none !important; /* 🌟 FUERZA A RESPETAR TUS MINÚSCULAS EN EL ADMIN (Bb, Gm, C#m) */
+}
+        @keyframes innerFade { from { opacity: 0; } to { opacity: 1; } }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .btn-logout {
+            background: transparent; color: var(--text-muted); border: 1px solid var(--border-window);
+            padding: 0.5rem 1rem; border-radius: 10px; cursor: pointer; font-size: 0.75rem; transition: all 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .btn-logout { padding: 0.6rem 1.2rem; font-size: 0.813rem; }
+        }
+
+        .btn-logout:hover { color: var(--text-main); background-color: rgba(255, 255, 255, 0.03); border-color: rgba(255, 255, 255, 0.2); }
+
+        /* Grids Inteligentes Líquidos */
+        .grid-services, .grid-people { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 1.5rem; 
+            animation: fadeIn 0.4s ease; 
+        }
+
+        @media (min-width: 1024px) {
+            .grid-services { grid-template-columns: 1fr 1.1fr 1.2fr; gap: 2rem; }
+            .grid-people { grid-template-columns: 1fr 1.8fr; gap: 2rem; }
+        }
+
+        .panel-window {
+            background: var(--window-bg); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-window); border-radius: 20px; padding: 1.5rem;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7); align-self: start;
+        }
+
+        @media (min-width: 768px) {
+            .panel-window { border-radius: 24px; padding: 2rem; }
+        }
+
+        .panel-window h3 { font-family: 'Syne', sans-serif; font-size: 1.2rem; margin-bottom: 1.5rem; }
+
+        .section-divider {
+            margin: 1.5rem 0 1rem 0; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: 'Syne', sans-serif; font-size: 0.75rem; color: var(--text-labels); letter-spacing: 0.1em;
+        }
+
+        .form-row { display: grid; grid-template-columns: 1fr; gap: 0; }
+        @media (min-width: 480px) {
+            .form-row { grid-template-columns: 1fr 1fr; gap: 1rem; }
+        }
+
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; font-size: 0.65rem; font-weight: 600; color: var(--text-labels); margin-bottom: 0.5rem; letter-spacing: 0.12em; }
+        
+        .form-group input, .form-group select {
+            width: 100%; padding: 0.8rem 1rem; background-color: rgba(10, 11, 16, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.03); border-radius: 12px; color: var(--text-main); font-family: inherit; font-size: 0.9rem;
+            outline: none; -webkit-appearance: none;
+        }
+
+        .form-group select {
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238e95a5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+            background-repeat: no-repeat; background-position: right 1rem center; background-size: 1rem;
+        }
+
+        .form-group select option { background-color: #12141d; color: #ffffff; }
+        .form-group input:focus, .form-group select:focus { border-color: rgba(255, 255, 255, 0.3); background-color: rgba(10, 11, 16, 0.8); }
+
+        .checkbox-group {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.6rem !important;
+            background: rgba(255, 255, 255, 0.02) !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            padding: 0.8rem 1rem !important;
+            border-radius: 12px !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease;
+            user-select: none;
+            width: 100% !important;
+        }
+
+        .checkbox-group:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* 🌟 Esto rompe el width 100% heredado y devuelve el control al checkbox */
+        .checkbox-group input[type="checkbox"] {
+            width: 18px !important;
+            height: 18px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            accent-color: var(--success) !important;
+            cursor: pointer !important;
+            flex-shrink: 0 !important;
+        }
+
+        .checkbox-group span {
+            font-size: 0.8rem !important;
+            color: var(--text-muted) !important;
+            font-weight: 500 !important;
+            cursor: pointer !important;
+            line-height: 1 !important;
+        }
+
+        .btn-submit {
+            width: 100%; padding: 0.9rem; background-color: var(--text-main); color: #050508;
+            border: none; border-radius: 12px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+        }
+        .btn-submit:hover { background-color: #e5e5e5; }
+
+        /* Monitor de Cultos */
+        .services-list { display: flex; flex-direction: column; gap: 1rem; }
+        .service-item {
+            background-color: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.02);
+            border-radius: 16px; padding: 1.25rem; transition: all 0.3s ease; cursor: pointer;
+        }
+        .service-item:hover, .service-item.active { border-color: rgba(255, 255, 255, 0.15); background-color: rgba(255, 255, 255, 0.03); }
+
+        .service-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+        .service-info h4 { font-size: 0.95rem; font-weight: 500; line-height: 1.3; }
+        .service-info p { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-top: 0.15rem; }
+        .service-date { font-size: 0.85rem; font-weight: 500; text-transform: capitalize; }
+        .service-time { font-size: 0.7rem; color: var(--text-muted); text-align: right; margin-top: 0.15rem; }
+
+        .team-assignments { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
+        .role-tag { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.03); padding: 0.35rem 0.5rem; border-radius: 6px; font-size: 0.688rem; }
+        .role-tag span { display: block; color: var(--text-muted); font-size: 0.55rem; text-transform: uppercase; margin-bottom: 0.1rem; }
+
+        /* Tablas adaptables */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 1rem; }
+        .plan-table, .people-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 500px; }
+        
+        /* En pantallas muy pequeñas, cambiamos la tabla de personas a un layout de tarjetas táctiles */
+        @media (max-width: 600px) {
+            .people-table, .people-table thead, .people-table tbody, .people-table th, .people-table td, .people-table tr { 
+                display: block; width: 100%; 
+            }
+            .people-table thead { display: none; }
+            .people-table tr {
+                background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03);
+                border-radius: 16px; padding: 1rem; margin-bottom: 1rem;
+            }
+            .people-table td {
+                padding: 0.4rem 0; border: none; display: flex; justify-content: space-between; align-items: center;
+            }
+            .people-table td::before {
+                content: attr(data-label); font-size: 0.65rem; font-weight: 600; color: var(--text-labels); text-transform: uppercase; letter-spacing: 0.05em;
+            }
+            .people-table td strong { text-align: right; }
+        }
+
+        .plan-table th, .people-table th { text-align: left; padding: 0.75rem; color: var(--text-labels); font-size: 0.7rem; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .plan-table td, .people-table td { padding: 0.875rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .plan-duration { color: var(--text-muted); font-size: 0.75rem; }
+
+        .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; }
+        .badge.success { background: rgba(52, 211, 153, 0.1); color: var(--success); }
+        .badge.neutral { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); }
+
+        /* Toasts y Modales Flotantes Líquidos */
+        #toastNotification {
+            position: fixed; bottom: 1rem; left: 1rem; right: 1rem;
+            background: rgba(18, 20, 29, 0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08); padding: 1rem; border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 0.75rem; z-index: 9999;
+            transform: translateY(200%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @media (min-width: 480px) {
+            #toastNotification { left: auto; right: 2rem; bottom: 2rem; min-width: 320px; width: auto; }
+        }
+
+        #confirmModal {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(5, 5, 8, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 10000;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 🌟 ESTILIZADO ULTRA-PREMIUM PARA EL INPUT DE HORA NATIVO */
+.input-time-elegant {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    background-color: rgba(10, 11, 16, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.3s ease;
+    cursor: text;
+}
+
+/* Efecto Focus al hacer clic para escribir */
+.input-time-elegant:focus {
+    border-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(10, 11, 16, 0.8);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.02);
+}
+
+/* 🎨 BLANQUEAR LOS NÚMEROS Y EL TEXTO INTERNO (Para navegadores Webkit como Chrome/Brave/Edge) */
+.input-time-elegant::-webkit-datetime-edit-fields-wrapper {
+    color: #ffffff;
+}
+.input-time-elegant::-webkit-datetime-edit-text,
+.input-time-elegant::-webkit-datetime-edit-hour-field,
+.input-time-elegant::-webkit-datetime-edit-minute-field,
+.input-time-elegant::-webkit-datetime-edit-ampm-field {
+    color: #ffffff;
+    font-weight: 500;
+}
+
+/* 🔄 CAMBIAR EL COLOR DEL ÍCONO DEL RELOJ NATIVO A GRIS ATENUADO */
+.input-time-elegant::-webkit-calendar-picker-indicator {
+    filter: invert(1) sepia(0) saturate(0) hue-rotate(0deg) opacity(0.4);
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.input-time-elegant::-webkit-calendar-picker-indicator:hover {
+    filter: invert(1) sepia(0) saturate(0) hue-rotate(0deg) opacity(0.8);
+}
+
+
+    </style>
+</head>
+<body>
+
+   <nav class="navbar" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem;">
+            <h2>CHRONOS</h2>
+            
+            <div style="display: flex; align-items: center; gap: 1.5rem; margin-left: auto; margin-right: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.02); padding: 0.4rem 0.75rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.03);">
+                    <div id="adminAvatarContainer" style="display: flex; align-items: center; flex-shrink: 0;">
+                        <div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-main); font-size: 0.75rem; border: 1px solid rgba(255,255,255,0.05);">A</div>
+                    </div>
+                    <div style="min-width: 0; text-align: left;">
+                        <h4 id="adminProfileName" style="font-size: 0.8rem; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; line-height: 1.2;">Cargando...</h4>
+                        <p id="adminProfileRole" style="font-size: 0.6rem; color: var(--text-muted); text-transform: capitalize; margin: 0; line-height: 1;">Administrador</p>
+                    </div>
+                </div>
+            </div>
+
+            <button id="btnLogout" class="btn-logout">Cerrar Sesión</button>
+        </nav>
+
+        <div id="profileModalAdmin" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5, 5, 8, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; z-index: 6000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;">
+            <div style="background: #12141d; border: 1px solid rgba(255,255,255,0.06); width: 90%; max-width: 400px; border-radius: 24px; padding: 2rem; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center;">
+                
+                <button type="button" onclick="window.cerrarModalPerfilAdmin()" style="position: absolute; top: 1.25rem; right: 1.25rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); color: #8e95a5; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.85rem;">✕</button>
+                
+                <h3 style="font-family: 'Syne', sans-serif; font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 1.5rem;">Mi Perfil de Voluntario</h3>
+                
+                <div style="position: relative; width: 100px; height: 100px; margin: 0 auto 1.5rem auto;">
+                    <div id="modalAdminAvatarContainer" style="width: 100%; height: 100%; border-radius: 50%; background: rgba(255,255,255,0.03); border: 2px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: #fff; overflow: hidden;">
+                        A
+                    </div>
+                    <input type="file" id="modalAdminFileInput" accept="image/*" style="display: none;">
+                    <button type="button" id="btnTriggerAdminUpload" style="position: absolute; bottom: 0; right: 0; background: #fff; color: #000; border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold;">+</button>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); padding: 1.25rem; border-radius: 16px; text-align: left; display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div>
+                        <span style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.2rem;">Nombre Completo</span>
+                        <span id="modalAdminName" style="color: #fff; font-size: 0.95rem; font-weight: 600;">—</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.2rem;">Área asignada</span>
+                        <span id="modalAdminArea" style="color: #fff; font-size: 0.95rem; font-weight: 600; text-transform: capitalize;">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs-nav">
+    <button id="btn-services" class="tab-btn active" onclick="switchTab('services-section')">Planificación General</button>
+    <button id="btn-people" class="tab-btn" onclick="switchTab('people-section')">Voluntarios</button>
+    <button id="btn-songs" class="tab-btn" onclick="switchTab('songs-section')">Canciones</button>
+</div>
+
+        <div id="services-section" class="tab-content active">
+            <div class="grid-services">
+                <div class="panel-window">
+                    <h3>Crear Servicio</h3>
+                    <form id="serviceForm">
+                        <div class="form-group">
+                            <label>TÍTULO DEL SERVICIO</label>
+                            <input type="text" id="serviceTitle" required placeholder="Ej: Culto Dominical">
+                        </div>
+                        <div class="form-group">
+                            <label>FECHA</label>
+                            <input type="date" id="serviceDate" required>
+                        </div>
+                       <div class="form-group">
+                            <label>HORA DE INICIO</label>
+                            <input type="time" id="serviceTime" class="input-time-elegant" required>
+                        </div>
+
+                        <button type="submit" class="btn-submit">Publicar Cabecera</button>
+                    </form>
+                </div>
+
+                <div class="panel-window">
+                    <h3>Cronograma General</h3>
+                    <p style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 1rem;">Selecciona un servicio para desglosar su Orden del Culto.</p>
+                    <div id="servicesContainer" class="services-list"></div>
+                </div>
+
+               <div class="panel-window" id="orderWindow" style="display: none;">
+                    <h3 id="orderTitle">Gestión del Servicio</h3>
+                    
+                    <div class="subtabs-nav">
+                        <button id="subbtn-escaleta" class="subtab-btn active" onclick="switchSubTab('subtab-escaleta')">Servicio</button>
+                        <button id="subbtn-setlist" class="subtab-btn" onclick="switchSubTab('subtab-setlist')">Setlist</button>
+                        <button id="subbtn-equipo" class="subtab-btn" onclick="switchSubTab('subtab-equipo')">Equipo</button> 
+                        <button id="subbtn-bosquejo" class="subtab-btn" onclick="switchSubTab('subtab-bosquejo')">Bosquejo</button>
+                    </div>
+
+                    <div id="subtab-escaleta" class="subtab-content active">
+                        <form id="itemForm" style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
+                            <p style="font-size: 0.7rem; color: var(--text-labels); margin-bottom: 0.75rem; font-weight: 600; letter-spacing: 0.05em;">AGREGAR ELEMENTO MINUTO A MINUTO</p>
+                            <div class="form-group">
+                                <input type="text" id="itemTitle" required placeholder="Ej: Apertura, Ofrenda, Anuncios">
+                            </div>
+                            <div class="form-group">
+                                <input type="number" id="itemDuration" required placeholder="Duración en minutos (Ej: 15)">
+                            </div>
+                            <button type="submit" class="btn-submit" style="padding: 0.6rem;">+ Insertar Bloque</button>
+                        </form>
+                        <div class="table-responsive">
+                            <table class="plan-table">
+                                <thead><tr><th>Elemento</th><th style="text-align: right;">Duración</th></tr></thead>
+                                <tbody id="planItemsContainer"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="subtab-setlist" class="subtab-content">
+                        <p style="font-size: 0.7rem; color: var(--text-labels); margin-bottom: 0.75rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">Añadir Música desde Biblioteca</p>
+                        
+                        <div class="form-group" style="position: relative; margin-bottom: 1.5rem;">
+                            <input type="text" id="searchSongsToServiceInput" placeholder="🔍 Escribe el nombre de la canción para agregar al setlist..." style="background: rgba(10,11,16,0.8); border: 1px solid rgba(255,255,255,0.08);">
+                            
+                            <div id="dropdownSongsResults" style="display:none; position: absolute; top: 100%; left: 0; right: 0; background: #12141d; border: 1px solid var(--border-window); border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></div>
+                        </div>
+                        
+                        <div class="section-divider" style="margin-top:0;">CANCIONES EN ESTE SERVICIO (Arrastra para reordenar)</div>
+                        
+                        <div id="songsContainerAdmin"></div>
+                    </div>
+
+
+
+                    <div id="subtab-equipo" class="subtab-content">
+                        <p style="font-size: 0.7rem; color: var(--text-labels); margin-bottom: 0.75rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">ASIGNACIÓN DE ROLES & BANDA</p>
+                        <p style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 1rem;">Asigna todos los instrumentos o tareas necesarias (Ej: Piano, Batería, Tele 1, Luces).</p>
+                        
+                        <div id="dynamicRolesContainer" style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem;"></div>
+
+                        <button type="button" id="btnAddCustomRole" class="btn-submit" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-main); padding: 0.6rem; margin-bottom: 1rem;">
+                            ➕ Añadir Rol / Instrumento
+                        </button>
+                        
+                        <button type="button" id="btnSaveTeam" class="btn-submit" style="padding: 0.7rem; background: var(--success); color: #050508;">Guardar Cambios del Equipo en la Nube</button>
+                    </div>
+
+                    <div id="subtab-bosquejo" class="subtab-content">
+                        <div class="form-group">
+                            <label>BOSQUEJO O NOTAS DEL MENSAJE PASTORAL</label>
+                            <textarea id="serviceSketch" placeholder="Escribe o pega aquí los puntos clave del sermón, versículos base o directrices..."></textarea>
+                        </div>
+                        <button id="btnSaveSketch" class="btn-submit" style="padding: 0.7rem;">Guardar Notas en la Nube</button>
+                    </div>
+
+                </div> </div> </div> <div id="people-section" class="tab-content">
+            <div class="grid-people">
+                <div class="panel-window">
+                    <h3>Registrar Persona</h3>
+                    <form id="personForm">
+                        <div class="form-group">
+                            <label>NOMBRE COMPLETO</label>
+                            <input type="text" id="fullName" required placeholder="Ej: Carlos Mendoza">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>TELÉFONO</label>
+                                <input type="tel" id="phone" placeholder="Ej: 5555-4321">
+                            </div>
+                            <div class="form-group">
+                                <label>FECHA DE NACIMIENTO</label>
+                                <input type="date" id="birthDate">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>DIRECCIÓN</label>
+                            <input type="text" id="address" placeholder="Ej: Ciudad de Guatemala">
+                        </div>
+                        <div class="form-group">
+                            <label>CORREO ELECTRÓNICO (PARA ACCESO)</label>
+                            <input type="email" id="personEmail" required placeholder="Ej: carlos@tuiglesia.com">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>ÁREA DE SERVICIO</label>
+                                <select id="serviceArea">
+                                    <option value="Miembro">Solo Miembro</option>
+                                    <option value="Pastor">Pastor</option> <option value="Alabanza">Alabanza / Música</option>
+                                    <option value="Multimedia">Multimedia</option>
+                                    <option value="Audio">Audio</option>
+                                    <option value="Logística">Logística / Servidores</option>
+                                    <option value="Tv">Tv</option>
+                                    <option value="Niños">Ministerio de niños</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="mentorGroup"> <label>LÍDER DIRECTO / MENTOR</label>
+                                <input type="text" id="mentorLeader" placeholder="Ej: Pastor René">
+                            </div>
+                        </div>
+
+                     <div class="form-group" id="leaderCheckboxGroup" style="display: none; margin-bottom: 1.25rem; animation: fadeIn 0.25s ease;">
+                            <div style="display: flex !important; align-items: center !important; gap: 0.75rem !important; background: rgba(52, 211, 153, 0.03) !important; border: 1px solid rgba(52, 211, 153, 0.15) !important; padding: 0.9rem 1rem !important; border-radius: 12px !important; width: 100% !important; box-sizing: border-box !important;">
+                                
+                                <input type="checkbox" id="isAreaLeader" style="width: 20px !important; height: 20px !important; accent-color: #34d399 !important; cursor: pointer !important; margin: 0 !important; padding: 0 !important; inline-size: 20px !important; block-size: 20px !important; appearance: checkbox !important; -webkit-appearance: checkbox !important;">
+                                
+                                <label for="isAreaLeader" style="color: #34d399 !important; font-size: 0.825rem !important; font-weight: 600 !important; cursor: pointer !important; user-select: none !important; line-height: 1 !important; margin: 0 !important; padding-left: 0.25rem !important; display: inline !important;">
+                                    👑 ¿Es el Encargado / Líder Principal de esta área?
+                                </label>
+                                
+                            </div>
+                        </div>
+
+                       <div class="form-group" id="worshipInstrumentGroup" style="display: none; margin-bottom: 1.25rem; animation: fadeIn 0.25s ease;">
+                            <label>FUNCIÓN EN LA BANDA / INSTRUMENTO</label>
+                            <select id="worshipInstrument">
+                                <option value="" disabled selected>-- Selecciona Instrumento o Rol --</option>
+                                
+                                <option value="Voz Principal">Voz Principal</option>
+                                <option value="Coros">Coros</option>
+                                <option value="Piano / Teclado">Piano / Teclado</option>
+                                <option value="Guitarra Eléctrica">Guitarra Eléctrica</option>
+                                <option value="Guitarra Acústica">Guitarra Acústica</option>
+                                <option value="Bajo Eléctrico">Bajo Eléctrico</option>
+                                <option value="Batería">Batería</option>
+                                <option value="Percusión">Percusión</option> </select>
+                        </div>
+
+                        <div class="section-divider">PROCESO ESPIRITUAL</div>
+                        <div class="form-row" style="margin-bottom: 0.75rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                            <label class="checkbox-group" for="isBaptized">
+                                <input type="checkbox" id="isBaptized">
+                                <span>¿Ya se bautizó?</span>
+                            </label>
+                            <label class="checkbox-group" for="inFriendshipGroup">
+                                <input type="checkbox" id="inFriendshipGroup">
+                                <span>¿Grupo de Amistad?</span>
+                            </label>
+                        </div>
+                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                            <label class="checkbox-group" for="hasADL">
+                                <input type="checkbox" id="hasADL">
+                                <span>ADL</span>
+                            </label>
+                            <label class="checkbox-group" for="hasEncounter">
+                                <input type="checkbox" id="hasEncounter">
+                                <span>Encuentro</span>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn-submit">Guardar Miembro</button>
+                    </form>
+                </div>
+
+               <div class="panel-window">
+                    <h3>Directorio General de la Iglesia</h3>
+                    <p style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 1.5rem;">Haz clic en cualquier categoría para desplegar los voluntarios.</p>
+                    
+                    <div id="accordionContainer" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
+                </div> </div> </div>
+
+    </div> 
+
+
+
+<div id="songs-section" class="tab-content">
+            <div class="grid-people"> <div class="panel-window">
+                    <h3 id="songLibraryFormTitle">Registrar Canción en Biblioteca</h3>
+                    <form id="songLibraryForm">
+                        <div class="form-group">
+                            <label>TÍTULO DE LA CANCIÓN</label>
+                            <input type="text" id="libSongTitle" required placeholder="Ej: A Él, Hermoso Nombre">
+                        </div>
+                        <div class="form-group">
+                            <label>TONALIDAD BASE (KEY)</label>
+                            <input type="text" id="libSongKey" required placeholder="Ej: Bb, G, C#m">
+                        </div>
+                        <div class="form-group">
+                            <label>ARCHIVO DE AUDIO (MP3, WAV, M4A)</label>
+                            <input type="file" id="libSongAudio" accept="audio/*" style="padding: 0.5rem 0;">
+                            <span id="lblAudioStatus" style="font-size:0.7rem; color:var(--text-muted); display:block; margin-top:-0.25rem;"></span>
+                        </div>
+                        <div class="form-group">
+                            <label>CIFRADO / ACORDES (.PDF)</label>
+                            <input type="file" id="libSongPdf" accept="application/pdf" style="padding: 0.5rem 0;">
+                            <span id="lblPdfStatus" style="font-size:0.7rem; color:var(--text-muted); display:block; margin-top:-0.25rem;"></span>
+                        </div>
+                        <button type="submit" id="btnSubmitLibrarySong" class="btn-submit">Guardar en Biblioteca</button>
+                    </form>
+                </div>
+
+                <div class="panel-window">
+                    <h3>Directorio de Canciones</h3>
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <input type="text" id="searchLibraryInput" placeholder="🔍 Buscar canción por título o tono..." style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="people-table">
+                            <thead>
+                                <tr>
+                                    <th>Canción</th>
+                                    <th>Tono</th>
+                                    <th>Recursos</th>
+                                    <th style="text-align: right;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="librarySongsListContainer">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+
+    <div id="toastNotification">
+        <div id="toastIcon" style="font-size: 1.1rem; display: flex; align-items: center;"></div>
+        <div id="toastText" style="font-size: 0.875rem; font-weight: 500; color: #ffffff;"></div>
+    </div>
+
+    <div id="confirmModal">
+        <div style="background: rgba(22, 24, 35, 0.95); border: 1px solid rgba(255, 255, 255, 0.08); padding: 1.75rem; border-radius: 24px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.8); transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);" id="confirmModalBox">
+            <div style="width: 48px; height: 48px; background: rgba(248, 113, 113, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </div>
+            <h4 style="font-family: 'Syne', sans-serif; font-size: 1.15rem; margin-bottom: 0.75rem;">¿Confirmar acción?</h4>
+            <p id="confirmModalMessage" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5;"></p>
+            <div style="display: flex; gap: 0.75rem;">
+                <button id="btnConfirmCancel" style="flex: 1; padding: 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; color: var(--text-muted); font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Cancelar</button>
+                <button id="btnConfirmSuccess" style="flex: 1; padding: 0.75rem; background: #f87171; border: none; border-radius: 12px; color: #050508; font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+        import { auth, db } from "./firebase-config.js";
+        import { getAuth, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { collection, getDocs, addDoc, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        // 🌟 INICIALIZAR SERVICIOS
+        const storage = getStorage(); 
+        const authInstance = getAuth();
+        
+        let selectedServiceId = null;
+        let listaVoluntariosGlobal = [];
+        let resolucionConfirmacion = null;
+        let editPersonId = null;
+        
+        const servicesContainer = document.getElementById('servicesContainer');
+        const orderWindow = document.getElementById('orderWindow');
+        const orderTitle = document.getElementById('orderTitle');
+        const planItemsContainer = document.getElementById('planItemsContainer');
+        const peopleContainer = document.getElementById('peopleContainer');
+        const personForm = document.getElementById('personForm');
+        const submitPersonBtn = personForm.querySelector('.btn-submit');
+        const toastNotification = document.getElementById('toastNotification');
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmModalBox = document.getElementById('confirmModalBox');
+
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            const target = document.getElementById(tabId);
+            if(target) target.classList.add('active');
+            
+            // Evalúa de forma exacta cuál botón encender basándose en la sección abierta
+            if(tabId === 'services-section') document.getElementById('btn-services').classList.add('active');
+            if(tabId === 'people-section') document.getElementById('btn-people').classList.add('active');
+            if(tabId === 'songs-section') document.getElementById('btn-songs').classList.add('active'); // 🌟 Enciende tu pestaña Canciones
+        }
+
+        // 🌟 NUEVO INTERRUPTOR DE SUBPESTAÑAS DE CONTROL INTERNO
+        window.switchSubTab = function(subTabId) {
+            document.querySelectorAll('.subtab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.subtab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(subTabId).classList.add('active');
+            
+            if(subTabId === 'subtab-escaleta') document.getElementById('subbtn-escaleta').classList.add('active');
+            if(subTabId === 'subtab-setlist') document.getElementById('subbtn-setlist').classList.add('active');
+            if(subTabId === 'subtab-equipo') document.getElementById('subbtn-equipo').classList.add('active');  
+            if(subTabId === 'subtab-bosquejo') document.getElementById('subbtn-bosquejo').classList.add('active');
+        }
+
+        // 🌟 CONTROLADOR FLUIDO DE PESTAÑAS PRINCIPALES (SOPORTE PARA CANCIONES)
+        window.switchTab = function(tabId) {
+            // Ocultar todos los bloques de contenido principales y remover clases activas de botones
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            // Mostrar la sección seleccionada
+            const targetSection = document.getElementById(tabId);
+            if(targetSection) targetSection.classList.add('active');
+            
+            // Mapear y encender el botón visual correspondiente de la barra superior
+            if(tabId === 'services-section') document.getElementById('btn-services').classList.add('active');
+            if(tabId === 'people-section') document.getElementById('btn-people').classList.add('active');
+            if(tabId === 'songs-section') document.getElementById('btn-songs').classList.add('active'); // 🌟 Tu nueva pestaña limpia
+        }
+
+        function mostrarToast(mensaje, tipo = 'success') {
+            const toastText = document.getElementById('toastText');
+            const toastIcon = document.getElementById('toastIcon');
+            toastText.innerText = mensaje;
+            
+            if(tipo === 'success') {
+                toastNotification.style.borderLeft = "4px solid var(--success)";
+                toastIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            } else if(tipo === 'delete') {
+                toastNotification.style.borderLeft = "4px solid #f87171";
+                toastIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+            }
+            toastNotification.style.transform = "translateY(0)";
+            setTimeout(() => { toastNotification.style.transform = "translateY(200%)"; }, 3500);
+        }
+
+        function preguntarConfirmacion(mensaje) {
+            document.getElementById('confirmModalMessage').innerText = mensaje;
+            confirmModal.style.opacity = "1";
+            confirmModal.style.pointerEvents = "auto";
+            confirmModalBox.style.transform = "scale(1)";
+            return new Promise((resolve) => { resolucionConfirmacion = resolve; });
+        }
+
+        document.getElementById('btnConfirmCancel').addEventListener('click', () => cerrarModalConfirmacion(false));
+        document.getElementById('btnConfirmSuccess').addEventListener('click', () => cerrarModalConfirmacion(true));
+
+        function cerrarModalConfirmacion(resultado) {
+            confirmModal.style.opacity = "0";
+            confirmModal.style.pointerEvents = "none";
+            confirmModalBox.style.transform = "scale(0.9)";
+            if(resolucionConfirmacion) resolucionConfirmacion(resultado);
+        }
+
+        function formatearFechaEspanol(fechaString) {
+            if(!fechaString) return '';
+            const partes = fechaString.split('-');
+            if (partes.length !== 3) return fechaString;
+            const fechaObjeto = new Date(partes[0], partes[1] - 1, partes[2]);
+            return fechaObjeto.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+        }
+
+        // 🌟 SUITE DE RENDERIZADO UNIFICADA PARECIENDO A PLANNING CENTER
+        function actualizarDatosSuiteGestion(serviceData) {
+
+            const planItemsContainer = document.getElementById('planItemsContainer');
+            planItemsContainer.innerHTML = "";
+            const plan = serviceData.plan || [];
+            
+            if(plan.length === 0) {
+                planItemsContainer.innerHTML = `<tr><td colspan="3" style="color: var(--text-muted); text-align: center; padding: 2rem;">No hay elementos añadidos aún.</td></tr>`;
+            } else {
+                const horaBaseString = serviceData.time || "07:00"; 
+                const [horasBase, minutosBase] = horaBaseString.split(':').map(Number);
+                
+                let tiempoAcumulado = new Date();
+                tiempoAcumulado.setHours(horasBase, minutosBase, 0, 0);
+
+                plan.forEach(p => {
+                    const duracionBloque = parseInt(p.duration) || 0;
+
+                    let horaInicioTxt = tiempoAcumulado.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: true });
+                    tiempoAcumulado.setMinutes(tiempoAcumulado.getMinutes() + duracionBloque);
+                    let horaFinTxt = tiempoAcumulado.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+                    planItemsContainer.insertAdjacentHTML('beforeend', `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.02); transition: background 0.2s;">
+                            <td style="padding: 1rem 0.75rem; width: 140px; font-variant-numeric: tabular-nums;">
+                                <span style="background: rgba(255, 255, 255, 0.04); color: var(--text-muted); font-size: 0.75rem; font-weight: 600; padding: 0.3rem 0.6rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.02); display: inline-block; white-space: nowrap;">
+                                     ${horaInicioTxt} - ${horaFinTxt}
+                                </span>
+                            </td>
+                            <td style="padding: 1rem 0.75rem;"><strong style="color: #ffffff; font-size: 0.875rem;">${p.title}</strong></td>
+                            <td style="text-align: right; padding: 1rem 0.75rem;" class="plan-duration"><span style="color: var(--text-labels); font-weight: 500;">${duracionBloque} min</span></td>
+                        </tr>
+                    `);
+                });
+            }
+
+            // 2. CONTROL DE LA SUBPESTAÑA: SETLIST (Música & Recursos en la PC)
+           const songsContainerAdmin = document.getElementById('songsContainerAdmin');
+            if (songsContainerAdmin) {
+                songsContainerAdmin.innerHTML = "";
+                const setlist = serviceData.setlist || [];
+                
+                if(setlist.length === 0) {
+                    songsContainerAdmin.innerHTML = `<p style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 1.5rem 1rem;">No hay canciones asignadas a este servicio.</p>`;
+                } else {
+                    setlist.forEach((song, index) => {
+                        let adjuntos = [];
+                        if (song.pdf) adjuntos.push("ACORDES");
+                        if (song.lyrics) adjuntos.push("LYRICS");
+                        if (song.audio) adjuntos.push("Audio");
+                        let txtAdjuntos = adjuntos.length > 0 ? adjuntos.join(" | ") : "Sin archivos adjuntos";
+
+                        // 🌟 Renderizado modificado: Se agrega el botón con la cruz (✕) a la extrema derecha
+                        songsContainerAdmin.insertAdjacentHTML('beforeend', `
+                            <div class="song-row-item" draggable="true" data-index="${index}" style="cursor: grab; user-select: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 0.5rem;">
+                                <div class="drag-handle" style="color: rgba(255, 255, 255, 0.15); font-size: 1.1rem; line-height: 1; padding: 0 0.25rem; transition: color 0.2s;" onmouseover="this.style.color='rgba(255,255,255,0.4)'" onmouseout="this.style.color='rgba(255,255,255,0.15)'">⣿</div>
+                                
+                                <div style="flex: 1; min-width: 0;">
+                                    <span style="color: #ffffff; font-weight: 600;">${song.title}</span><br>
+                                    <span style="font-size: 0.725rem; color: var(--text-muted); margin-top: 0.25rem; display: inline-block;">${txtAdjuntos}</span>
+                                </div>
+                                
+                                <span class="song-key" style="margin-right: 0.5rem;">${song.key}</span>
+
+                                <button type="button" class="btn-remove-song-from-service" data-index="${index}" style="background: rgba(248, 113, 113, 0.05); border: 1px solid rgba(248, 113, 113, 0.1); color: #f87171; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; transition: all 0.2s; flex-shrink: 0;" onmouseover="this.style.background='rgba(248, 113, 113, 0.15)'" onmouseout="this.style.background='rgba(248, 113, 113, 0.05)'">
+                                    ✕
+                                </button>
+                            </div>
+                        `);
+                    });
+
+                    // 🌟 ESCUCHA DE CLICKS PARA ELIMINAR LA CANCION DEL LISTADO DEL SERVICIO
+                    songsContainerAdmin.querySelectorAll('.btn-remove-song-from-service').forEach(btn => {
+                        btn.addEventListener('click', async (e) => {
+                            e.stopPropagation(); // Evita conflictos con el Drag & Drop
+                            if (!selectedServiceId) return;
+
+                            const indiceAEliminar = parseInt(btn.getAttribute('data-index'));
+                            const cancionObjetivo = setlist[indiceAEliminar];
+
+                            const confirmar = await preguntarConfirmacion(`¿Quitar "${cancionObjetivo.title}" de este servicio? (No se borrará de la biblioteca global)`);
+                            
+                            if (confirmar) {
+                                // Clonamos el array actual y le podamos el elemento usando su índice exacto
+                                const nuevoSetlist = [...setlist];
+                                nuevoSetlist.splice(indiceAEliminar, 1);
+
+                                try {
+                                    const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js");
+                                    await updateDoc(doc(db, "services", selectedServiceId), {
+                                        setlist: nuevoSetlist
+                                    });
+                                    mostrarToast(`"${cancionObjetivo.title}" removida del servicio`, "delete");
+                                } catch (error) {
+                                    console.error("Error al remover canción del servicio:", error);
+                                    mostrarToast("No se pudo actualizar el servicio", "delete");
+                                }
+                            }
+                        });
+                    });
+
+                    inicializarDragAndDropSetlist(setlist);
+                }
+            }
+
+            // 3. CONTROL DE LA SUBPESTAÑA: BOSQUEJO (Notas del Mensaje)
+            const serviceSketch = document.getElementById('serviceSketch');
+            if (serviceSketch) {
+                if (document.activeElement !== serviceSketch) {
+                    serviceSketch.value = serviceData.sketch || "";
+                }
+            }
+
+            // 4. RE-CONSTRUIR FILAS EN LA SUBPESTAÑA DE EQUIPO ADM
+            const dynamicRolesContainer = document.getElementById('dynamicRolesContainer');
+            if (dynamicRolesContainer) {
+                dynamicRolesContainer.innerHTML = "";
+                const rolesExistentes = serviceData.roles || {};
+                
+                Object.keys(rolesExistentes).forEach(puesto => {
+                    crearFilaDeRolDinamico(puesto, rolesExistentes[puesto]);
+                });
+            }
+        }
+
+
+
+        document.getElementById('serviceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                // 🌟 Guardamos solo los datos existentes. El mapa 'roles' inicia vacío 
+                // para que configures al equipo de forma pro en la pestaña derecha.
+                await addDoc(collection(db, "services"), {
+                    title: document.getElementById('serviceTitle').value,
+                    date: document.getElementById('serviceDate').value,
+                    time: document.getElementById('serviceTime').value,
+                    roles: {}, 
+                    plan: [],
+                    created_at: new Date().toISOString()
+                });
+                
+                document.getElementById('serviceForm').reset();
+                mostrarToast("Cabecera del culto publicada");
+            } catch (err) { 
+                console.error("Error al crear cabecera del servicio:", err); 
+                mostrarToast("Error al publicar el servicio", "delete");
+            }
+        });
+
+        // 🌟 SNAPSHOT EN TIEMPO REAL: CRONOGRAMA GENERAL CON FILTRO DE NOMBRES ULTRA-LIMPIOS
+        onSnapshot(query(collection(db, "services"), orderBy("date", "asc")), (snapshot) => {
+            servicesContainer.innerHTML = "";
+            snapshot.forEach((docSnap) => {
+                const service = docSnap.data();
+                const id = docSnap.id;
+                const roles = service.roles || {};
+                const fechaEspanol = formatearFechaEspanol(service.date);
+                
+                // Inicializamos los contenedores con "Sin asignar"
+                let encargadoPredica = "Sin asignar";
+                let encargadoMusica  = "Sin asignar";
+                let encargadoMedia   = "Sin asignar";
+                let encargadoSonido  = "Sin asignar";
+
+                // Arrays de respaldo
+                let backupPredica = [];
+                let backupMusica  = [];
+                let backupMedia   = [];
+                let backupSonido  = [];
+
+                // 🔍 FUNCIÓN INTERNA PARA LIMPIAR EL NOMBRE
+                // Remueve guiones bajos dobles (__) y cualquier texto sobrante del puesto
+                const limpiarNombrePersona = (textoCompleto) => {
+                    if (!textoCompleto) return "Sin asignar";
+                    // Si viene en formato "Angel Lima__Predicador" o "Angel Lima - Predica", corta en el separador
+                    let limpio = textoCompleto.split("__")[0].split(" - ")[0].split(" — ")[0];
+                    return limpio.trim();
+                };
+
+                // 🔍 ANALIZADOR DE ROLES
+                Object.keys(roles).forEach(puesto => {
+                    const puestoLower = puesto.toLowerCase();
+                    const personaLimpia = limpiarNombrePersona(roles[puesto]);
+                    
+                    const esLider = puestoLower.includes("director") || 
+                                    puestoLower.includes("líder") || 
+                                    puestoLower.includes("lider") || 
+                                    puestoLower.includes("pastor") || 
+                                    puestoLower.includes("encargado") || 
+                                    puestoLower.includes("principal");
+
+                    // Clasificación y asignación del nombre purificado
+                    if (puestoLower.includes("predic") || puestoLower.includes("pastor") || puestoLower.includes("word")) {
+                        backupPredica.push(personaLimpia);
+                        if (esLider || puestoLower === "predica" || puestoLower === "predicador") encargadoPredica = personaLimpia;
+                    } 
+                    else if (puestoLower.includes("músic") || puestoLower.includes("worship") || puestoLower.includes("director") || puestoLower.includes("alabanza") || puestoLower.includes("banda") || puestoLower.includes("piano") || puestoLower.includes("guitarra") || puestoLower.includes("voz") || puestoLower.includes("coro")) {
+                        backupMusica.push(personaLimpia);
+                        if (esLider) encargadoMusica = personaLimpia;
+                    } 
+                    else if (puestoLower.includes("media") || puestoLower.includes("pantalla") || puestoLower.includes("proyecc") || puestoLower.includes("cámara") || puestoLower.includes("switch") || puestoLower.includes("video")) {
+                        backupMedia.push(personaLimpia);
+                        if (esLider || puestoLower.includes("encargado")) encargadoMedia = personaLimpia;
+                    } 
+                    else if (puestoLower.includes("sonid") || puestoLower.includes("audio") || puestoLower.includes("consola") || puestoLower.includes("mixer")) {
+                        backupSonido.push(personaLimpia);
+                        if (esLider || puestoLower.includes("sonidista") || puestoLower.includes("encargado")) encargadoSonido = personaLimpia;
+                    }
+                });
+
+                // 🔄 PLAN B: Si no hay palabra clave jerárquica, toma el primer nombre limpio de la lista
+                if (encargadoPredica === "Sin asignar" && backupPredica.length > 0) encargadoPredica = backupPredica[0];
+                if (encargadoMusica === "Sin asignar" && backupMusica.length > 0)   encargadoMusica = backupMusica[0];
+                if (encargadoMedia === "Sin asignar" && backupMedia.length > 0)     encargadoMedia = backupMedia[0];
+                if (encargadoSonido === "Sin asignar" && backupSonido.length > 0)   encargadoSonido = backupSonido[0];
+
+                const item = document.createElement('div');
+                item.className = `service-item ${id === selectedServiceId ? 'active' : ''}`;
+                item.style.position = 'relative';
+                
+                item.innerHTML = `
+                    <div class="service-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                        <div class="service-info" style="flex: 1; min-width: 0; cursor: pointer;">
+                            <h4>${service.title}</h4>
+                            <p>Plan General</p>
+                        </div>
+                        <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                            <div style="text-align: right;">
+                                <div class="service-date" style="text-transform: capitalize;">${fechaEspanol}</div>
+                                <div class="service-time">${service.time} hrs</div>
+                            </div>
+                            
+                            <button type="button" class="btn-delete-entire-service" data-id="${id}" data-title="${service.title}" style="background: rgba(248, 113, 113, 0.05); border: 1px solid rgba(248, 113, 113, 0.1); color: #f87171; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; transition: all 0.2s; flex-shrink: 0;" onmouseover="this.style.background='rgba(248, 113, 113, 0.15)'" onmouseout="this.style.background='rgba(248, 113, 113, 0.05)'">
+                                ✕
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="team-assignments" style="cursor: pointer;">
+                        <div class="role-tag"><span>Líder/Predica</span>${encargadoPredica}</div>
+                        <div class="role-tag"><span>Música/Banda</span>${encargadoMusica}</div>
+                        <div class="role-tag"><span>Media/Video</span>${encargadoMedia}</div>
+                        <div class="role-tag"><span>Sonido/Audio</span>${encargadoSonido}</div> 
+                    </div>
+                `;
+                
+                // Evento de selección del servicio
+                const capturarClicksDeSeleccion = (e) => {
+                    if (e.target.closest('.btn-delete-entire-service')) return;
+                    document.querySelectorAll('.service-item').forEach(el => el.classList.remove('active'));
+                    item.classList.add('active');
+                    selectedServiceId = id;
+                    orderTitle.innerText = `Gestión: ${service.title}`;
+                    orderWindow.style.display = 'block';
+                    actualizarDatosSuiteGestion(service);
+                    orderWindow.scrollIntoView({ behavior: 'smooth' });
+                };
+
+                item.addEventListener('click', capturarClicksDeSeleccion);
+                
+                // Evento de borrado
+                const btnBorrarCulto = item.querySelector('.btn-delete-entire-service');
+                btnBorrarCulto.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const idServicio = btnBorrarCulto.getAttribute('data-id');
+                    const tituloServicio = btnBorrarCulto.getAttribute('data-title');
+                    
+                    const confirmar = await preguntarConfirmacion(`¿Remover permanentemente "${tituloServicio}" y todo su plan min-a-min del servidor?`);
+                    
+                    if (confirmar) {
+                        try {
+                            await deleteDoc(doc(db, "services", idServicio));
+                            mostrarToast("Servicio removido del cronograma", "delete");
+                            
+                            if (selectedServiceId === idServicio) {
+                                selectedServiceId = null;
+                                orderWindow.style.display = 'none';
+                                planItemsContainer.innerHTML = `<tr><td colspan="3" style="color: var(--text-muted); text-align: center; padding: 2rem;">No hay elementos añadidos aún.</td></tr>`;
+                                document.getElementById('songsContainerAdmin').innerHTML = `<p style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 1.5rem 1rem;">No hay canciones asignadas a este servicio.</p>`;
+                                if(document.getElementById('dynamicRolesContainer')) document.getElementById('dynamicRolesContainer').innerHTML = "";
+                                if(document.getElementById('serviceSketch')) document.getElementById('serviceSketch').value = "";
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            mostrarToast("Error al intentar borrar el servicio", "delete");
+                        }
+                    }
+                });
+                
+                servicesContainer.appendChild(item);
+
+                if (id === selectedServiceId) {
+                    orderTitle.innerText = `Gestión: ${service.title}`;
+                    actualizarDatosSuiteGestion(service);
+                }
+            });
+        });
+
+        document.getElementById('itemForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if(!selectedServiceId) return;
+            const inputTitle = document.getElementById('itemTitle').value;
+            const inputDuration = parseInt(document.getElementById('itemDuration').value);
+            try {
+                await updateDoc(doc(db, "services", selectedServiceId), {
+                    plan: arrayUnion({ title: inputTitle, duration: inputDuration })
+                });
+                document.getElementById('itemForm').reset();
+                mostrarToast("Bloque añadido a la escaleta");
+            } catch (err) { console.error(err); }
+        });
+
+        
+
+        document.getElementById('btnSaveSketch').addEventListener('click', async () => {
+            if(!selectedServiceId) return;
+            try {
+                await updateDoc(doc(db, "services", selectedServiceId), {
+                    sketch: document.getElementById('serviceSketch').value
+                });
+                mostrarToast("Bosquejo guardado y sincronizado");
+            } catch (err) { console.error(err); }
+        });
+
+
+// ==========================================================================
+        // COMPORTAMIENTO DINÁMICO DEL SELECTOR DE ÁREAS (PASTOR / ENCARGADO ALABANZA)
+        // ==========================================================================
+        const serviceAreaSelect = document.getElementById('serviceArea');
+        const mentorGroup = document.getElementById('mentorGroup');
+        const mentorInput = document.getElementById('mentorLeader');
+        const leaderCheckboxGroup = document.getElementById('leaderCheckboxGroup');
+        const isAreaLeaderCheckbox = document.getElementById('isAreaLeader');
+
+        if (serviceAreaSelect) {
+            serviceAreaSelect.addEventListener('change', (e) => {
+                const areaSeleccionada = e.target.value;
+
+                // 1. Regla para Pastor: Ocultar y limpiar el campo de Mentor
+                if (areaSeleccionada === 'Pastor') {
+                    mentorGroup.style.display = 'none';
+                    mentorInput.value = 'Ninguno (Cobertura Principal)';
+                    mentorInput.removeAttribute('required');
+                } else {
+                    mentorGroup.style.display = 'block';
+                    if (mentorInput.value === 'Ninguno (Cobertura Principal)') {
+                        mentorInput.value = '';
+                    }
+                }
+
+                // 2. Regla Avanzada para Alabanza (Muestra líder e instrumento musical al unísono)
+                const worshipGroup = document.getElementById('worshipInstrumentGroup');
+                
+                if (areaSeleccionada === 'Alabanza') {
+                    if (leaderCheckboxGroup) leaderCheckboxGroup.style.setProperty('display', 'block', 'important');
+                    if (worshipGroup) worshipGroup.style.setProperty('display', 'block', 'important');
+                } else {
+                    if (leaderCheckboxGroup) leaderCheckboxGroup.style.display = 'none';
+                    if (worshipGroup) worshipGroup.style.display = 'none';
+                    if (isAreaLeaderCheckbox) isAreaLeaderCheckbox.checked = false; 
+                    const selectMusica = document.getElementById('worshipInstrument');
+                    if (selectMusica) selectMusica.value = "";
+                }
+            });
+        }
+
+
+        // ==================== REGISTRO DE VOLUNTARIOS CON CONTRASEÑA MAESTRA ====================
+        personForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const emailInput = document.getElementById('personEmail');
+            
+            if (!emailInput) {
+                alert("Error de desarrollo: No se encontró el input con el ID 'personEmail' en el HTML. Por favor agrégalo.");
+                return;
+            }
+
+            const emailValue = emailInput.value.trim().toLowerCase();
+            const passwordMaestra = "Iglesia2026"; // 🔑 Contraseña maestra global de acceso
+
+            const personData = {
+                fullName: document.getElementById('fullName').value,
+                phone: document.getElementById('phone').value || 'N/A',
+                birthDate: document.getElementById('birthDate').value || '',
+                address: document.getElementById('address').value || 'N/A',
+                email: emailValue,
+                serviceArea: document.getElementById('serviceArea').value,
+                mentorLeader: document.getElementById('mentorLeader').value || 'Sin asignar',
+                isAreaLeader: document.getElementById('isAreaLeader').checked, // 👑 Determina estatus de encargado
+                
+                // 🎸 AQUÍ ESTÁ LA LÍNEA QUE FALTABA: Guarda el instrumento si es de Alabanza, si no lo deja vacío
+                instrument: document.getElementById('serviceArea').value === 'Alabanza' ? document.getElementById('worshipInstrument').value : '',
+                
+                isBaptized: document.getElementById('isBaptized').checked,
+                inFriendshipGroup: document.getElementById('inFriendshipGroup').checked,
+                hasADL: document.getElementById('hasADL').checked,             
+                hasEncounter: document.getElementById('hasEncounter').checked, 
+                updated_at: new Date().toISOString()
+            };
+
+            try {
+                if (editPersonId) {
+                    // Modo Edición: Actualiza únicamente los datos de la ficha técnica en 'people'
+                    await updateDoc(doc(db, "people", editPersonId), personData);
+                    editPersonId = null;
+                    submitPersonBtn.innerText = "Guardar Miembro";
+                    submitPersonBtn.style.background = "var(--text-main)";
+                    submitPersonBtn.style.color = "#050508";
+                    mostrarToast("Perfil de voluntario actualizado");
+                } else {
+                    // Modo Creación: 1. Guarda los datos en la colección 'people'
+                    personData.created_at = new Date().toISOString();
+                    await addDoc(collection(db, "people"), personData);
+
+                    // 2. Crea de forma automática las credenciales en Firebase Auth
+                    try {
+                        const credencialesUsuario = await createUserWithEmailAndPassword(auth, emailValue, passwordMaestra);
+                        const uidGenerado = credencialesUsuario.user.uid;
+
+                        // 🌟 3. DETERMINACIÓN INTELIGENTE DE ROL: 
+                        // Si se registra como "Pastor", hereda acceso de pastor, de lo contrario es un voluntario estándar.
+                        const rolDeAcceso = personData.serviceArea === 'Pastor' ? 'pastor' : 'volunteer';
+
+                        await setDoc(doc(db, "users", uidGenerado), {
+                            correo: emailValue,
+                            rol: rolDeAcceso 
+                        });
+
+                        mostrarToast(`¡Usuario listo! Registrado con acceso de [${rolDeAcceso.toUpperCase()}]`);
+                    } catch (authErr) {
+                        console.warn("La ficha técnica fue creada con éxito, pero la cuenta de correo ya existía en Firebase Auth:", authErr.message);
+                        mostrarToast("Ficha guardada (El correo ya tiene un usuario de acceso previo)");
+                    }
+                }
+
+                // --- CIERRE Y LIMPIEZA DEL FORMULARIO ---
+                personForm.reset();
+                editPersonId = null;
+                
+                document.getElementById('isAreaLeader').checked = false;
+                submitPersonBtn.innerText = "Registrar Voluntario +";
+                submitPersonBtn.style.background = "var(--text-main)";
+                submitPersonBtn.style.color = "#000000";
+                
+                document.getElementById('isBaptized').checked = false;
+                document.getElementById('inFriendshipGroup').checked = false;
+                document.getElementById('hasADL').checked = false;
+                document.getElementById('hasEncounter').checked = false;
+                
+                // Limpia el selector de instrumentos
+                if (document.getElementById('worshipInstrument')) {
+                    document.getElementById('worshipInstrument').value = "";
+                }
+                
+                // Dispara el evento change para actualizar la vista dinámica del formulario
+                document.getElementById('serviceArea').dispatchEvent(new Event('change'));
+
+            } catch (err) { 
+                console.error("Error crítico al procesar el registro del voluntario:", err); 
+                mostrarToast("Error en el registro del voluntario", "delete");
+            }
+        });
+
+
+       // ==================== REAL-TIME DIRECTORIO GENERAL CON LOGÍSTICA DE ENCARGADOS ====================
+        onSnapshot(query(collection(db, "people"), orderBy("fullName", "asc")), (snapshot) => {
+            let accordionContainer = document.getElementById('accordionContainer');
+            if (!accordionContainer) {
+                const panelDirectorio = document.querySelector('.grid-people .panel-window:last-child') || document.querySelector('.panel-window:last-child');
+                if (panelDirectorio) {
+                    accordionContainer = document.createElement('div');
+                    accordionContainer.id = 'accordionContainer';
+                    accordionContainer.style.cssText = "display: flex; flex-direction: column; gap: 0.75rem; width: 100%;";
+                    panelDirectorio.appendChild(accordionContainer);
+                } else {
+                    return; 
+                }
+            }
+
+            accordionContainer.innerHTML = "";
+
+            if (snapshot.empty) {
+                accordionContainer.innerHTML = `<div style="color: var(--text-muted); text-align: center; padding: 2rem; background: rgba(255,255,255,0.01); border-radius:12px; border: 1px solid rgba(255,255,255,0.02);">No hay miembros registrados.</div>`;
+                return;
+            }
+
+            const currentUserRole = localStorage.getItem('userRole') || '';
+            if (currentUserRole !== 'admin' && currentUserRole !== 'pastor' && currentUserRole !== 'volunteer' && currentUserRole !== 'voluntario') {
+                accordionContainer.innerHTML = `<div style="color: var(--text-muted); text-align: center; padding: 2rem; background: rgba(255,255,255,0.01); border-radius:12px; border: 1px solid rgba(255,255,255,0.02);">No tienes permisos para ver esta lista.</div>`;
+                return;
+            }
+
+            // Estructura limpia de grupos base
+            const grupos = {
+                "Alabanza": [],
+                "Multimedia": [],
+                "Audio": [],
+                "Logística": [],
+                "Tv": [],
+                "Niños": [],
+                "Miembro": []
+            };
+
+            snapshot.forEach((docSnap) => {
+                const person = docSnap.data();
+                const id = docSnap.id;
+                const area = person.serviceArea || "Miembro";
+                
+                if (grupos[area]) {
+                    grupos[area].push({ id, ...person });
+                } else {
+                    if (!grupos["Otros"]) grupos["Otros"] = [];
+                    grupos["Otros"].push({ id, ...person });
+                }
+            });
+
+            Object.keys(grupos).forEach((categoria) => {
+                const listaPersonas = grupos[categoria];
+                if (listaPersonas.length === 0) return;
+
+                // 🌟 REGLA 1: ORDEN ALFABÉTICO INTERNO DE LA CATEGORÍA (A -> Z)
+                listaPersonas.sort((a, b) => a.fullName.localeCompare(b.fullName));
+
+                const detalles = document.createElement('details');
+                detalles.style.cssText = `
+                    background: rgba(255, 255, 255, 0.02);
+                    border: 1px solid rgba(255, 255, 255, 0.04);
+                    border-radius: 12px;
+                    overflow: hidden;
+                    margin-bottom: 0.25rem;
+                    transition: all 0.3s ease;
+                `;
+
+                const sumario = document.createElement('summary');
+                sumario.style.cssText = `
+                    padding: 1rem;
+                    font-family: 'Syne', sans-serif;
+                    font-size: 0.9rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                    user-select: none;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    color: var(--text-main);
+                `;
+                sumario.innerHTML = `
+                    <span>📁 ${categoria.toUpperCase()}</span>
+                    <span style="background: rgba(255,255,255,0.06); padding: 0.15rem 0.5rem; border-radius: 20px; font-size: 0.75rem; font-family: 'Inter'; font-weight: 500; color: var(--text-muted);">${listaPersonas.length}</span>
+                `;
+                detalles.appendChild(sumario);
+
+                const contenido = document.createElement('div');
+                contenido.style.cssText = `
+                    padding: 0 1rem 1rem 1rem;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.75rem;
+                    border-top: 1px solid rgba(255, 255, 255, 0.02);
+                    background: rgba(0, 0, 0, 0.1);
+                `;
+
+                listaPersonas.forEach((person) => {
+                    const id = person.id;
+                    const bzBadge = person.isBaptized ? `<span class="badge success">Bautizado</span>` : `<span class="badge neutral">No Bautizado</span>`;
+                    const fgBadge = person.inFriendshipGroup ? `<span class="badge success">Grupo Amistad</span>` : `<span class="badge neutral">Sin Grupo</span>`;
+                    const adlBadge = person.hasADL ? `<span class="badge success">ADL</span>` : `<span class="badge neutral">Sin ADL</span>`;
+                    const encBadge = person.hasEncounter ? `<span class="badge success">Encuentro</span>` : `<span class="badge neutral">Sin Encuentro</span>`;
+
+                    let fechaCumpleanos = 'N/A';
+                    if (person.birthDate && person.birthDate.includes('-')) {
+                        const partes = person.birthDate.split('-');
+                        if (partes.length === 3) fechaCumpleanos = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                    }
+
+                    const tieneAccesoEscritura = (currentUserRole === 'admin' || currentUserRole === 'pastor');
+
+                    // 🌟 REGLA 2: CONDICIONES DE ESTILOS PARA EL ENCARGADO DE ÁREA
+                    let estiloFondoCard = "background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.02);";
+                    let badgeEncargadoArea = "";
+
+                    if (person.isAreaLeader === true) {
+                        estiloFondoCard = "background: rgba(52, 211, 153, 0.03) !important; border: 1px solid rgba(52, 211, 153, 0.18) !important;";
+                        badgeEncargadoArea = `<span class="badge" style="background: rgba(52, 211, 153, 0.15); color: #34d399; font-weight: 700; border: 1px solid rgba(52, 211, 153, 0.2); margin-bottom: 0.25rem;">👑 ENCARGADO DE ÁREA</span>`;
+                    }
+
+                    // 🎸 MUESTRA EL INSTRUMENTO ASIGNADO EN LA LISTA VISIBLE DEL ACCORDION
+                    let badgeInstrumentoMusical = "";
+                    if (person.serviceArea === 'Alabanza' && person.instrument) {
+                        badgeInstrumentoMusical = `<span class="badge" style="background: rgba(255, 255, 255, 0.05); color: #ffffff; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 0.25rem; padding: 0.15rem 0.4rem; border-radius: 6px; font-size: 0.7rem;">🎸 ${person.instrument}</span>`;
+                    }
+
+                    contenido.insertAdjacentHTML('beforeend', `
+                        <div class="user-row-card" style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem; border-radius: 10px; gap: 1rem; flex-wrap: wrap; ${estiloFondoCard}">
+                            <div style="flex: 1; min-width: 200px;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                    <strong style="font-size: 0.9rem; color: #ffffff;">${person.fullName}</strong>
+                                    ${badgeEncargadoArea}
+                                    ${badgeInstrumentoMusical} </div>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.15rem;">📍 ${person.address || 'N/A'}</span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">📞 Tel: ${person.phone} • Nac: ${fechaCumpleanos}</span>
+                                <span style="font-size: 0.725rem; color: var(--text-labels); display: block; margin-top: 0.25rem;">Mentor: ${person.mentorLeader || 'Sin asignar'}</span>
+                            </div>
+                            
+                            <div style="display: flex; align-items: center; gap: 1rem; justify-content: space-between; min-width: 180px;">
+                                <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+                                    ${bzBadge}
+                                    ${fgBadge}
+                                    ${adlBadge}
+                                    ${encBadge}
+                                </div>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    ${tieneAccesoEscritura ? `
+                                        <button class="btn-edit-acc" data-id="${id}" title="Editar" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; transition: background 0.2s;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                        </button>
+                                        <button class="btn-delete-acc" data-id="${id}" title="Eliminar" style="background: rgba(248,113,113,0.05); border: 1px solid rgba(248,113,113,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; transition: background 0.2s;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                        </button>
+                                    ` : `
+                                        <span style="color: var(--text-muted); font-size: 0.725rem; font-style: italic; background: rgba(255,255,255,0.02); padding: 0.35rem 0.6rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.02);">Solo Lectura</span>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                });
+
+                detalles.appendChild(contenido);
+
+                // Handlers para Editar
+                detalles.querySelectorAll('.btn-edit-acc').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const targetId = btn.getAttribute('data-id');
+                        const person = listaPersonas.find(item => item.id === targetId);        
+                        
+                        editPersonId = targetId;
+                        document.getElementById('fullName').value = person.fullName;
+                        document.getElementById('phone').value = person.phone === 'N/A' ? '' : person.phone;
+                        document.getElementById('birthDate').value = person.birthDate;
+                        document.getElementById('address').value = person.address === 'N/A' ? '' : person.address;
+                        document.getElementById('personEmail').value = person.email || '';
+                        document.getElementById('serviceArea').value = person.serviceArea;
+                        document.getElementById('mentorLeader').value = person.mentorLeader === 'Sin asignar' ? '' : person.mentorLeader;
+                        document.getElementById('isBaptized').checked = person.isBaptized;
+                        document.getElementById('inFriendshipGroup').checked = person.inFriendshipGroup;
+                        document.getElementById('hasADL').checked = person.hasADL || false;
+                        document.getElementById('hasEncounter').checked = person.hasEncounter || false;
+                        document.getElementById('isAreaLeader').checked = person.isAreaLeader || false;
+
+                        // 🌟 CORRECCIÓN CRÍTICA: Disparar el cambio de área primero
+                        document.getElementById('serviceArea').dispatchEvent(new Event('change'));
+
+                        // 🎸 FORZAR AL SELECTOR DE INSTRUMENTOS A VISIBILIZARSE Y MARCAR EL VALOR GUARDADO
+                        const worshipGroup = document.getElementById('worshipInstrumentGroup');
+                        const worshipSelect = document.getElementById('worshipInstrument');
+                        
+                        if (person.serviceArea === 'Alabanza') {
+                            if (worshipGroup) worshipGroup.style.setProperty('display', 'block', 'important');
+                            if (worshipSelect) worshipSelect.value = person.instrument || '';
+                        } else {
+                            if (worshipGroup) worshipGroup.style.display = 'none';
+                            if (worshipSelect) worshipSelect.value = '';
+                        }
+
+                        submitPersonBtn.innerText = "Actualizar Miembro ✓";
+                        submitPersonBtn.style.background = "rgba(52, 211, 153, 0.2)";
+                        submitPersonBtn.style.color = "var(--success)";
+                        document.getElementById('personForm').scrollIntoView({ behavior: 'smooth' });
+                    });
+                });
+
+                // Handlers para Eliminar
+                detalles.querySelectorAll('.btn-delete-acc').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const targetId = btn.getAttribute('data-id');
+                        const person = listaPersonas.find(item => item.id === targetId);
+                        
+                        const unirseAlCambio = await preguntarConfirmacion(`¿Estás completamente seguro de remover permanentemente a ${person.fullName}? Esta acción no se puede deshacer.`);
+                        if (unirseAlCambio) {
+                            try {
+                                const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js");
+                                await deleteDoc(doc(db, "people", targetId));
+                                mostrarToast("Registro eliminado del servidor", "delete");
+                            } catch (err) { console.error(err); }
+                        }
+                    });
+                });
+
+                accordionContainer.appendChild(detalles);
+            });
+        });
+
+
+        // 🌟 MANEJADOR DE ORDEN DE CANCIONES (DRAG & DROP)
+        function inicializarDragAndDropSetlist(setlistActual) {
+            const contenedor = document.getElementById('songsContainerAdmin');
+            const filas = contenedor.querySelectorAll('.song-row-item');
+            let itemArrastrado = null;
+
+            filas.forEach(fila => {
+                fila.addEventListener('dragstart', (e) => {
+                    itemArrastrado = fila;
+                    fila.style.opacity = '0.3'; // 🌟 Se vuelve más transparente al volar
+                    fila.style.background = 'rgba(255, 255, 255, 0.04)'; // 🌟 Le da un fondo tenue al arrastrar
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+
+                fila.addEventListener('dragend', () => {
+                    itemArrastrado = null;
+                    filas.forEach(f => {
+                        f.style.opacity = '1';
+                        f.style.background = 'transparent'; // 🌟 Limpia el fondo de todas las filas al soltar
+                    });
+                });
+
+                fila.addEventListener('dragover', (e) => {
+                    e.preventDefault(); 
+                });
+
+                fila.addEventListener('drop', async (e) => {
+                    e.preventDefault();
+                    if (!itemArrastrado || itemArrastrado === fila) return;
+
+                    const indiceOrigen = parseInt(itemArrastrado.getAttribute('data-index'));
+                    const indiceDestino = parseInt(fila.getAttribute('data-index'));
+
+                    // Reordenar el array en memoria
+                    const nuevoSetlist = [...setlistActual];
+                    const [elementoMovido] = nuevoSetlist.splice(indiceOrigen, 1);
+                    nuevoSetlist.splice(indiceDestino, 0, elementoMovido);
+
+                    // Guardar nueva estructura en Firestore
+                    if (selectedServiceId) {
+                        try {
+                            await updateDoc(doc(db, "services", selectedServiceId), {
+                                setlist: nuevoSetlist
+                            });
+                            mostrarToast("Orden del setlist actualizado");
+                        } catch (err) {
+                            console.error("Error al reordenar:", err);
+                            mostrarToast("No se pudo guardar el orden");
+                        }
+                    }
+                });
+            });
+        }
+
+
+        const dynamicRolesContainer = document.getElementById('dynamicRolesContainer');
+        const btnAddCustomRole = document.getElementById('btnAddCustomRole');
+        const btnSaveTeam = document.getElementById('btnSaveTeam');
+
+
+        async function cargarVoluntariosDisponibles() {
+            try {
+                // Buscamos en tu colección 'people'
+                const querySnapshot = await getDocs(collection(db, "people"));
+                listaVoluntariosGlobal = [];
+                
+                querySnapshot.forEach((docSnap) => {
+                    const datos = docSnap.data();
+                    if (datos.fullName) {
+                        listaVoluntariosGlobal.push({
+                            id: docSnap.id,
+                            nombre: datos.fullName,
+                            area: datos.serviceArea || "General"
+                        });
+                    }
+                });
+
+                // Ordenar alfabéticamente por nombre
+                listaVoluntariosGlobal.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                console.log("Voluntarios cargados para asignación:", listaVoluntariosGlobal.length);
+            } catch (error) {
+                console.error("Error al cargar lista de voluntarios:", error);
+            }
+        }
+
+
+       // ==========================================================================
+        // 👥 MOTOR DE ROLES DINÁMICOS CON FILTRADO POR ÁREA Y FUNCIÓN ESPECÍFICA
+        // ==========================================================================
+        
+        // Función para inyectar una nueva fila de asignación inteligente
+        function crearFilaDeRolDinamico(puesto = "", asignadoCompleto = "") {
+            const uniqueId = Date.now() + Math.random().toString(36).substr(2, 5);
+            
+            // Separar el nombre del voluntario y lo que hará si viene de la base de datos (Ej: "Antony de León__Bajo")
+            let nombreAsignado = asignadoCompleto;
+            let queHara = puesto; // Usamos el puesto original como la tarea por defecto si no está separado
+
+            if (asignadoCompleto.includes('__')) {
+                const partes = asignadoCompleto.split('__');
+                nombreAsignado = partes[0];
+                queHara = partes[1];
+            }
+
+            // 1. Crear el contenedor de la fila interactiva con 4 columnas estéticas
+            const htmlFila = `
+                <div class="role-dynamic-row" id="row-${uniqueId}" style="display: grid; grid-template-columns: 1.2fr 1.5fr 1.2fr 40px; gap: 0.5rem; align-items: center; margin-bottom: 0.6rem; animation: fadeIn 0.2s ease;">
+                    
+                    <select class="input-role-area" style="padding: 0.6rem; font-size: 0.85rem; background: rgba(10,11,16,0.5); border: 1px solid rgba(255,255,255,0.03); border-radius:8px; color:#fff; cursor: pointer;">
+                        <option value="">-- Filtrar Área --</option>
+                        <option value="Miembro">Solo Miembro</option>
+                        <option value="Pastor">Pastor</option>
+                        <option value="Alabanza">Alabanza / Música</option>
+                        <option value="Multimedia">Multimedia</option>
+                        <option value="Audio">Audio</option>
+                        <option value="Logística">Logística / Servidores</option>
+                        <option value="Tv">Tv</option>
+                        <option value="Niños">Ministerio de niños</option>
+                    </select>
+
+                    <select class="input-role-value" required style="padding: 0.6rem; font-size: 0.85rem; background: rgba(10,11,16,0.5); border: 1px solid rgba(255,255,255,0.03); border-radius:8px; color:#fff; cursor: pointer;">
+                        <option value="">-- Servidor --</option>
+                    </select>
+
+                    <input type="text" class="input-role-key" required placeholder="Ej: Bajo, Tele 1, Luces" value="${queHara}" style="padding: 0.6rem; font-size: 0.85rem; background: rgba(10,11,16,0.5); border: 1px solid rgba(255,255,255,0.03); border-radius:8px; color:#fff;">
+                    
+                    <button type="button" onclick="document.getElementById('row-${uniqueId}').remove()" style="background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.15); color: #f87171; border-radius: 8px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold;">✕</button>
+                </div>
+            `;
+            
+            dynamicRolesContainer.insertAdjacentHTML('beforeend', htmlFila);
+
+            // Conseguir las referencias de la fila recién inyectada en el DOM
+            const filaReciente = document.getElementById(`row-${uniqueId}`);
+            const areaSelect = filaReciente.querySelector('.input-role-area');
+            const volunteerSelect = filaReciente.querySelector('.input-role-value');
+
+            // 🔄 Función interna para filtrar y poblar los nombres en orden alfabético
+            function actualizarFiltroNombres(areaSeleccionada, preseleccionado = "") {
+                volunteerSelect.innerHTML = `<option value="">-- Servidor --</option>`;
+                
+                // Filtrar del listado global guardado en memoria
+                const filtrados = listaVoluntariosGlobal.filter(vol => {
+                    if (!areaSeleccionada) return true; // Si no hay filtro, muestra todos
+                    return vol.area === areaSeleccionada;
+                });
+
+                // Inyectar las opciones correspondientes
+                filtrados.forEach(vol => {
+                    const isSelected = vol.nombre === preseleccionado ? 'selected' : '';
+                    volunteerSelect.insertAdjacentHTML('beforeend', `<option value="${vol.nombre}" ${isSelected}>${vol.nombre}</option>`);
+                });
+            }
+
+            // Escuchar el cambio de área para filtrar los nombres al instante
+            areaSelect.addEventListener('change', (e) => {
+                actualizarFiltroNombres(e.target.value);
+            });
+
+            // Intentar pre-detectar el área del voluntario si venía cargado de la base de datos
+            let areaDetectada = "";
+            if (nombreAsignado) {
+                const volEncontrado = listaVoluntariosGlobal.find(v => v.nombre === nombreAsignado);
+                if (volEncontrado) areaDetectada = volEncontrado.area;
+            }
+
+            // Inicializar el render de los nombres
+            areaSelect.value = areaDetectada;
+            actualizarFiltroNombres(areaDetectada, nombreAsignado);
+        }
+
+        if (btnAddCustomRole) {
+            btnAddCustomRole.addEventListener('click', () => crearFilaDeRolDinamico("", ""));
+        }
+
+        // Guardar el mapa de roles directamente en el servicio seleccionado
+        if (btnSaveTeam) {
+            btnSaveTeam.addEventListener('click', async () => {
+                if (!selectedServiceId) {
+                    mostrarToast("Selecciona primero un servicio del cronograma", "delete");
+                    return;
+                }
+
+                const mapaRolesAsignados = {};
+                const filas = dynamicRolesContainer.querySelectorAll('.role-dynamic-row');
+                
+                filas.forEach(fil => {
+                    const funcionQueHara = fil.querySelector('.input-role-key').value.trim();
+                    const nombreVoluntario = fil.querySelector('.input-role-value').value.trim();
+                    
+                    if(funcionQueHara && nombreVoluntario) {
+                        // Guardamos estructurado en el mapa para mantener la compatibilidad de tu base de datos:
+                        // Llave: "Bajo" -> Valor: "Antony de León__Bajo"
+                        mapaRolesAsignados[funcionQueHara] = `${nombreVoluntario}__${funcionQueHara}`;
+                    }
+                });
+
+                try {
+                    await updateDoc(doc(db, "services", selectedServiceId), {
+                        roles: mapaRolesAsignados 
+                    });
+                    mostrarToast("Equipo de trabajo actualizado y guardado");
+                } catch (err) {
+                    console.error(err);
+                    mostrarToast("Error al guardar el equipo");
+                }
+            });
+        }
+
+
+        // 🚪 CIERRE DE SESIÓN Y COMPROBACIONES DE AUTH (Línea ~532 original)
+        document.getElementById('btnLogout').addEventListener('click', () => signOut(auth));
+
+        function inicializarPanel() {
+            // El contenedor principal está listo para inicializar pestañas genéricas
+        }
+
+        // 🌟 FUNCIONES DE CONTROL DEL MODAL EXPUESTAS DE FORMA GLOBAL
+        window.cerrarModalPerfilAdmin = () => {
+            const modal = document.getElementById('profileModalAdmin');
+            if (modal) {
+                modal.style.opacity = '0';
+                modal.style.pointerEvents = 'none';
+            }
+        };
+
+        // 🔐 COMPROBACIÓN DE AUTENTICACIÓN Y ENLACE DE DATOS EN TIEMPO REAL
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (!userDoc.exists() || userDoc.data().rol !== 'admin') {
+                        signOut(auth);
+                        return;
+                    }
+
+                    // 🌟 VÍNCULO DIRECTO CON LA COLECCIÓN 'PEOPLE' VIA UID
+                    const personDoc = await getDoc(doc(db, "people", user.uid));
+                    const avatarContainer = document.getElementById('adminAvatarContainer');
+                    const profileName = document.getElementById('adminProfileName');
+                    const profileRole = document.getElementById('adminProfileRole');
+
+                    // Selectores internos de la ventana modal flotante
+                    const modalAvatarContainer = document.getElementById('modalAdminAvatarContainer');
+                    const modalAdminName = document.getElementById('modalAdminName');
+                    const modalAdminArea = document.getElementById('modalAdminArea');
+
+                    // Función interna para refrescar la navbar y la modal simultáneamente
+                    const refrescarUIPerfil = (nombre, area, fotoUrl) => {
+                        if (profileName) profileName.innerText = nombre;
+                        if (modalAdminName) modalAdminName.innerText = nombre;
+                        if (modalAdminArea) modalAdminArea.innerText = area ? `Director ${area}` : "Administrador Principal";
+                        if (profileRole) profileRole.innerText = area ? `Director ${area}` : "Administrador";
+
+                        if (fotoUrl) {
+                            const imagenHTML = `<img src="${fotoUrl}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                            if (avatarContainer) avatarContainer.innerHTML = `<div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;">${imagenHTML}</div>`;
+                            if (modalAvatarContainer) modalAvatarContainer.innerHTML = imagenHTML;
+                        } else {
+                            const inicial = nombre.charAt(0).toUpperCase();
+                            if (avatarContainer) avatarContainer.innerHTML = `<div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; font-size: 0.75rem;">${inicial}</div>`;
+                            if (modalAvatarContainer) modalAvatarContainer.innerHTML = inicial;
+                        }
+                    };
+
+                    // Renderizar datos iniciales si existen en Firestore
+                    if (personDoc.exists()) {
+                        const datosPersona = personDoc.data();
+                        refrescarUIPerfil(datosPersona.name || "Administrador", datosPersona.area || "", datosPersona.avatarUrl || null);
+                    } else {
+                        refrescarUIPerfil(user.displayName || "Administrador", "", null);
+                    }
+
+                    // 🛠️ CONFIGURAR CLICK EN TU NOMBRE/FOTO PARA ABRIR EL MODAL FLOTANTE
+                    const wrapperPerfil = avatarContainer?.parentElement;
+                    if (wrapperPerfil) {
+                        wrapperPerfil.style.cursor = 'pointer';
+                        wrapperPerfil.title = "Ver mi Perfil Completo";
+                        wrapperPerfil.onclick = () => {
+                            const modal = document.getElementById('profileModalAdmin');
+                            if (modal) {
+                                modal.style.opacity = '1';
+                                modal.style.pointerEvents = 'auto';
+                            }
+                        };
+                    }
+
+                    // 📸 MANEJADOR DE CARGA DE IMÁGENES A FIREBASE STORAGE
+                    const btnTrigger = document.getElementById('btnTriggerAdminUpload');
+                    const fileInput = document.getElementById('modalAdminFileInput');
+
+                    if (btnTrigger && fileInput) {
+                        btnTrigger.onclick = () => fileInput.click();
+
+                        fileInput.onchange = async (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+
+                            mostrarToast("Subiendo imagen de perfil...", "info");
+
+                            try {
+                                // Importación dinámica de Storage para asegurar que las funciones estén listas
+                                const { ref: sRef, uploadBytes: sUpload, getDownloadURL: sGetURL } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js");
+                                
+                                const pathReferencia = sRef(storage, `profiles/${user.uid}_${file.name}`);
+                                await sUpload(pathReferencia, file);
+                                const urlFinalDescarga = await sGetURL(pathReferencia);
+
+                                // Guardar cambios en la colección centralizada de personas
+                                await setDoc(doc(db, "people", user.uid), {
+                                    avatarUrl: urlFinalDescarga
+                                }, { merge: true });
+
+                                // Recuperar instantánea fresca y actualizar toda la interfaz
+                                const snapFresco = await getDoc(doc(db, "people", user.uid));
+                                if (snapFresco.exists()) {
+                                    const d = snapFresco.data();
+                                    refrescarUIPerfil(d.name || "Administrador", d.area || "", d.avatarUrl);
+                                }
+
+                                mostrarToast("Foto de perfil actualizada correctamente");
+                            } catch (err) {
+                                console.error("Error al subir archivo a Firebase Storage:", err);
+                                mostrarToast("Error al cargar la imagen", "delete");
+                            }
+                        };
+                    }
+
+                    await cargarVoluntariosDisponibles();
+                    inicializarPanel();
+
+                } catch (error) {
+                    console.error("Error cargando perfil dinámico:", error);
+                    signOut(auth);
+                }
+            } else {
+                window.location.href = '/index.html';
+            }
+        });
+
+
+        // ==========================================================================
+        // 🎵 MOTOR TRANSACCIONAL DE LA BIBLIOTECA CENTRAL DE CANCIONES
+        // ==========================================================================
+        let editLibrarySongId = null;
+        let bibliotecaCancionesGlobal = [];
+        let urlAudioExistente = "";
+        let urlPdfExistente = "";
+
+        const songLibraryForm = document.getElementById('songLibraryForm');
+        const btnSubmitLibrarySong = document.getElementById('btnSubmitLibrarySong');
+        const librarySongsListContainer = document.getElementById('librarySongsListContainer');
+        const searchLibraryInput = document.getElementById('searchLibraryInput');
+
+        // 1. Escucha en tiempo real de la biblioteca de canciones en orden alfabético
+        onSnapshot(query(collection(db, "songs"), orderBy("title", "asc")), (snapshot) => {
+            bibliotecaCancionesGlobal = [];
+            librarySongsListContainer.innerHTML = "";
+
+            if (snapshot.empty) {
+                librarySongsListContainer.innerHTML = `<tr><td colspan="4" style="color:var(--text-muted); text-align:center; padding:2rem;">No hay canciones en la biblioteca.</td></tr>`;
+                return;
+            }
+
+            snapshot.forEach((docSnap) => {
+                const song = docSnap.data();
+                const id = docSnap.id;
+                bibliotecaCancionesGlobal.push({ id, ...song });
+
+                let iconosRecursos = "";
+                if(song.audio) iconosRecursos += "🎵 ";
+                if(song.pdf) iconosRecursos += "📄 ";
+                if(!iconosRecursos) iconosRecursos = "Ninguno";
+
+                librarySongsListContainer.insertAdjacentHTML('beforeend', `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.02);">
+                        <td><strong style="color:#fff;">${song.title}</strong></td>
+                        <td><span class="song-key">${song.key}</span></td>
+                        <td><span style="font-size:0.8rem;">${iconosRecursos}</span></td>
+                        <td style="text-align: right;">
+                            <div style="display: flex; gap: 0.4rem; justify-content: flex-end;">
+                                <button type="button" class="btn-edit-song" data-id="${id}" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); cursor: pointer; width: 30px; height: 30px; border-radius: 6px; display:flex; align-items:center; justify-content:center;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                </button>
+                                <button type="button" class="btn-delete-song" data-id="${id}" style="background: rgba(248,113,113,0.05); border: 1px solid rgba(248,113,113,0.1); cursor: pointer; width: 30px; height: 30px; border-radius: 6px; display:flex; align-items:center; justify-content:center;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `);
+            });
+
+            // Handlers para Editar Canción de la Biblioteca
+            librarySongsListContainer.querySelectorAll('.btn-edit-song').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.getAttribute('data-id');
+                    const song = bibliotecaCancionesGlobal.find(s => s.id === id);
+                    if (!song) return;
+
+                    editLibrarySongId = id;
+                    document.getElementById('libSongTitle').value = song.title;
+                    document.getElementById('libSongKey').value = song.key;
+                    urlAudioExistente = song.audio || "";
+                    urlPdfExistente = song.pdf || "";
+
+                    document.getElementById('lblAudioStatus').innerText = song.audio ? "✓ Contiene audio en nube" : "Sin audio previo";
+                    document.getElementById('lblPdfStatus').innerText = song.pdf ? "✓ Contiene PDF en nube" : "Sin PDF previo";
+
+                    document.getElementById('songLibraryFormTitle').innerText = "Editar Canción de Biblioteca";
+                    btnSubmitLibrarySong.innerText = "Actualizar Cambios ✓";
+                    btnSubmitLibrarySong.style.background = "rgba(52, 211, 153, 0.2)";
+                    btnSubmitLibrarySong.style.color = "var(--success)";
+                });
+            });
+
+            // Handlers para Eliminar Canción de la Biblioteca
+            librarySongsListContainer.querySelectorAll('.btn-delete-song').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.getAttribute('data-id');
+                    const song = bibliotecaCancionesGlobal.find(s => s.id === id);
+                    const confirmar = await preguntarConfirmacion(`¿Remover permanentemente "${song.title}" de la biblioteca global?`);
+                    if(confirmar) {
+                        await deleteDoc(doc(db, "songs", id));
+                        mostrarToast("Canción borrada de la biblioteca", "delete");
+                    }
+                });
+            });
+        });
+
+        // 2. Buscador reactivo en el directorio de canciones
+        if(searchLibraryInput) {
+            searchLibraryInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase().trim();
+                const filas = librarySongsListContainer.querySelectorAll('tr');
+                
+                filas.forEach(fil => {
+                    const texto = fil.innerText.toLowerCase();
+                    fil.style.display = texto.includes(term) ? '' : 'none';
+                });
+            });
+        }
+
+        // 3. Procesar Formulario de Guardado/Edición en la Biblioteca Central
+        songLibraryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            btnSubmitLibrarySong.disabled = true;
+            btnSubmitLibrarySong.innerText = "Subiendo binarios a Storage...";
+
+            const title = document.getElementById('libSongTitle').value.trim();
+            const key = document.getElementById('libSongKey').value.trim();
+            const fileAudio = document.getElementById('libSongAudio').files[0];
+            const filePdf = document.getElementById('libSongPdf').files[0];
+
+            try {
+                let audioUrl = editLibrarySongId ? urlAudioExistente : "";
+                let pdfUrl = editLibrarySongId ? urlPdfExistente : "";
+
+                if(fileAudio) {
+                    const audioRef = ref(storage, `library_audios/${Date.now()}_${fileAudio.name}`);
+                    const snap = await uploadBytes(audioRef, fileAudio);
+                    audioUrl = await getDownloadURL(snap.ref);
+                }
+                if(filePdf) {
+                    const pdfRef = ref(storage, `library_pdfs/${Date.now()}_${filePdf.name}`);
+                    const snap = await uploadBytes(pdfRef, filePdf);
+                    pdfUrl = await getDownloadURL(snap.ref);
+                }
+
+                const payload = { title, key, audio: audioUrl, pdf: pdfUrl, updated_at: new Date().toISOString() };
+
+                if(editLibrarySongId) {
+                    await updateDoc(doc(db, "songs", editLibrarySongId), payload);
+                    mostrarToast("Canción de la biblioteca actualizada");
+                } else {
+                    payload.created_at = new Date().toISOString();
+                    await addDoc(collection(db, "songs"), payload);
+                    mostrarToast("Canción añadida a la biblioteca central");
+                }
+
+                // Resetear estado del formulario
+                songLibraryForm.reset();
+                editLibrarySongId = null;
+                document.getElementById('lblAudioStatus').innerText = "";
+                document.getElementById('lblPdfStatus').innerText = "";
+                document.getElementById('songLibraryFormTitle').innerText = "Registrar Canción en Biblioteca";
+                btnSubmitLibrarySong.innerText = "Guardar en Biblioteca";
+                btnSubmitLibrarySong.style.background = "var(--text-main)";
+                btnSubmitLibrarySong.style.color = "#050508";
+
+            } catch (err) {
+                console.error(err);
+                mostrarToast("Error al procesar la canción", "delete");
+            } finally {
+                btnSubmitLibrarySong.disabled = false;
+            }
+        });
+
+
+        // ==========================================================================
+        // 🔍 buscador en cascada: vincular canciones de biblioteca a servicios
+        // ==========================================================================
+        const searchSongsToServiceInput = document.getElementById('searchSongsToServiceInput');
+        const dropdownSongsResults = document.getElementById('dropdownSongsResults');
+
+        if (searchSongsToServiceInput && dropdownSongsResults) {
+            searchSongsToServiceInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase().trim();
+                dropdownSongsResults.innerHTML = "";
+
+                if(!term) {
+                    dropdownSongsResults.style.display = "none";
+                    return;
+                }
+
+                const filtradas = bibliotecaCancionesGlobal.filter(s => s.title.toLowerCase().includes(term));
+
+                if(filtradas.length === 0) {
+                    dropdownSongsResults.innerHTML = `<div style="padding:0.8rem; font-size:0.8rem; color:var(--text-muted);">No se encontraron coincidencias. Créala en la Biblioteca.</div>`;
+                    dropdownSongsResults.style.display = "block";
+                    return;
+                }
+
+                filtradas.forEach(song => {
+                    const item = document.createElement('div');
+                    item.style.cssText = "padding:0.75rem 1rem; cursor:pointer; font-size:0.85rem; border-bottom:1px solid rgba(255,255,255,0.02); display:flex; justify-content:space-between; align-items:center; color:#fff;";
+                    item.innerHTML = `<span>🎵 <strong>${song.title}</strong></span> <span class="song-key">${song.key}</span>`;
+                    
+                    // Al hacer clic, se vincula directo al array setlist de este culto específico
+                    item.addEventListener('click', async () => {
+                        if(!selectedServiceId) return;
+
+                        try {
+                            await updateDoc(doc(db, "services", selectedServiceId), {
+                                setlist: arrayUnion({
+                                    title: song.title,
+                                    key: song.key,
+                                    pdf: song.pdf || "",
+                                    lyrics: "", // El PDF de acordes ya cubre la estructura
+                                    audio: song.audio || "",
+                                    timestamp: new Date().toISOString()
+                                })
+                            });
+                            
+                            searchSongsToServiceInput.value = "";
+                            dropdownSongsResults.style.display = "none";
+                            mostrarToast(`"${song.title}" agregada al servicio`);
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    });
+
+                    dropdownSongsResults.appendChild(item);
+                });
+
+                dropdownSongsResults.style.display = "block";
+            });
+
+            // Cerrar menú si se hace clic afuera
+            document.addEventListener('click', (e) => {
+                if(e.target !== searchSongsToServiceInput) dropdownSongsResults.style.display = "none";
+            });
+        }
+
+        
+    </script>
+</body>
+</html>

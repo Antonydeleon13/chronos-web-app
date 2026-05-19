@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronos — Church Operations Suite</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #050508; /* Negro absoluto de alta gama */
+            --text-main: #ffffff;
+            --text-muted: #6b7280;
+            --text-labels: #9ca3af;
+            --accent: #ffffff; /* El blanco puro es el nuevo color de acento para máxima elegancia */
+            --accent-gradient: linear-gradient(135deg, #ffffff 0%, #a3a3a3 100%);
+            --error: #f87171;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: -0.01em;
+        }
+
+        /* ✨ EFECTO DE LUJO: Iluminación ambiental asimétrica */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, rgba(0,0,0,0) 70%);
+            top: -10%;
+            right: -10%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.02) 0%, rgba(0,0,0,0) 60%);
+            bottom: -10%;
+            left: -10%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Contenedor Principal */
+        .login-container {
+            width: 100%;
+            max-width: 380px;
+            margin: auto;
+            position: relative;
+            z-index: 1;
+            animation: elegantFade 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* Branding Escandinavo */
+        .brand {
+            text-align: center;
+            margin-bottom: 3.5rem;
+        }
+
+        .brand h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 2.3rem;
+            font-weight: 800;
+            letter-spacing: -0.10em;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .brand p {
+            color: var(--text-muted);
+            font-size: 0.688rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4em; /* Espaciado ultra-elegante */
+            font-weight: 500;
+        }
+
+        /* Formulario Limpio (Sin tarjeta tosca, estilo flotante) */
+        .login-form-wrapper {
+            background-color: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 24px;
+            padding: 2.5rem 2rem;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.688rem;
+            font-weight: 600;
+            color: var(--text-labels);
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.15em;
+        }
+
+        /* Inputs de Alta Gama */
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 0;
+            background-color: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border-radius: 0;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-bottom-color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Mensaje de Error Minimalista */
+        .error-message {
+            color: var(--error);
+            font-size: 0.813rem;
+            margin-bottom: 1.5rem;
+            display: none;
+            text-align: left;
+            font-weight: 400;
+            letter-spacing: 0.01em;
+            border-left: 2px solid var(--error);
+            padding-left: 0.75rem;
+        }
+
+        /* Botón de Alta Costura */
+        .btn-submit {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--text-main);
+            color: var(--bg-color);
+            border: none;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.05);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-submit:hover {
+            background-color: #e5e5e5;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        /* Animación fluida de cortina */
+        @keyframes elegantFade {
+            from { opacity: 0; transform: translateY(20px); filter: blur(8px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="brand">
+            <h1>CHRONOS</h1>
+            <p>Service Manƒager</p>
+        </div>
+
+        <div class="login-form-wrapper">
+            <div id="errorMessage" class="error-message"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">CORREO ELECTRÓNICO</label>
+                    <input type="email" id="email" required placeholder="nombre@iglesia.com" autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">CONTRASEÑA</label>
+                    <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn-submit">Acceder</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db, signInWithEmailAndPassword, doc, getDoc } from "./firebase-config.js";
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMessage');
+
+            errorDiv.style.display = 'none';
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // 1. Obtener el documento del usuario en Firestore
+const userDocRef = doc(db, "users", user.uid);
+const userDocSnap = await getDoc(userDocRef);
+
+if (userDocSnap.exists()) {
+    const userData = userDocSnap.data();
+    
+    /* 🌟 ACTUALIZACIÓN: Ahora leemos estrictamente el campo 'rol' 
+       y le aplicamos un limpiador para ignorar mayúsculas o espacios extra */
+    const userRole = userData.rol ? userData.rol.toLowerCase().trim() : '';
+
+
+
+    if (userRole === 'admin' || userRole === 'pastor') {
+        window.location.href = '/admin.html';
+    } else if (userRole === 'volunteer' || userRole === 'voluntario') {
+        window.location.href = '/miembros.html'; // 🌟 Modificado para ir directo a tu portal de miembros
+    } else {
+        window.location.href = '/miembros.html';
+    }
+} else {
+    errorDiv.innerText = 'Este perfil no cuenta con privilegios de acceso en Chronos.';
+    errorDiv.style.display = 'block';
+}
+
+            } catch (error) {
+                console.error("Error:", error);
+                if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+                    errorDiv.innerText = 'Las credenciales introducidas no son válidas.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorDiv.innerText = 'El formato del correo es incorrecto.';
+                } else {
+                    errorDiv.innerText = 'Servicio no disponible temporalmente.';
+                }
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
