@@ -395,108 +395,117 @@
 </div>
 
         <div id="services-section" class="tab-content active">
-            <div class="grid-services">
-                <div class="panel-window">
-                    <h3>Crear Servicio</h3>
-                    <form id="serviceForm">
-                        <div class="form-group">
-                            <label>TÍTULO DEL SERVICIO</label>
-                            <input type="text" id="serviceTitle" required placeholder="Ej: Culto Dominical">
-                        </div>
-                        <div class="form-group">
-                            <label>FECHA</label>
-                            <input type="date" id="serviceDate" required>
-                        </div>
-                       <div class="form-group">
-                            <label>HORA DE INICIO</label>
-                            <input type="time" id="serviceTime" class="input-time-elegant" required>
-                        </div>
-
-                        <button type="submit" class="btn-submit">CREAR SERVICIO</button>
-                    </form>
+    <div class="grid-services">
+        
+        <div class="panel-window" id="col-crear-servicio">
+            <h3>Crear Servicio</h3>
+            <form id="serviceForm">
+                <div class="form-group">
+                    <label>TÍTULO DEL SERVICIO</label>
+                    <input type="text" id="serviceTitle" required placeholder="Ej: Culto Dominical">
+                </div>
+                <div class="form-group">
+                    <label>FECHA</label>
+                    <input type="date" id="serviceDate" required>
+                </div>
+                <div class="form-group">
+                    <label>HORA DE INICIO</label>
+                    <input type="time" id="serviceTime" class="input-time-elegant" required>
                 </div>
 
-                <div class="panel-window">
-                    <h3>Cronograma General</h3>
-                    <p style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 1rem;">Selecciona un servicio para desglosar detalles.</p>
-                    <div id="servicesContainer" class="services-list"></div>
-                </div>
-
-               <div class="panel-window" id="orderWindow" style="display: none;">
-                    <h3 id="orderTitle">Gestión del Servicio</h3>
-                    
-                    <div class="subtabs-nav">
-                        <button id="subbtn-escaleta" class="subtab-btn active" onclick="switchSubTab('subtab-escaleta')">Servicio</button>
-                        <button id="subbtn-setlist" class="subtab-btn" onclick="switchSubTab('subtab-setlist')">Setlist</button>
-                        <button id="subbtn-equipo" class="subtab-btn" onclick="switchSubTab('subtab-equipo')">Equipo</button> 
-                        <button id="subbtn-bosquejo" class="subtab-btn" onclick="switchSubTab('subtab-bosquejo')">Bosquejo</button>
-                    </div>
-
-                    <div id="subtab-escaleta" class="subtab-content active">
-                        <form id="itemForm" style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
-                            <p style="font-size: 0.7rem; color: var(--text-labels); margin-bottom: 0.75rem; font-weight: 600; letter-spacing: 0.05em;">AGREGAR ELEMENTO MINUTO A MINUTO</p>
-                            <div class="form-group">
-                                <input type="text" id="itemTitle" required placeholder="Ej: Apertura, Ofrenda, Anuncios">
-                            </div>
-                            <div class="form-group">
-                                <input type="number" id="itemDuration" required placeholder="Duración en minutos (Ej: 15)">
-                            </div>
-                            <button type="submit" class="btn-submit" style="padding: 0.6rem;">+ Insertar Bloque</button>
-                        </form>
-                        <div class="table-responsive">
-                            <table class="plan-table">
-                                <thead><tr><th>Elemento</th><th style="text-align: right;">Duración</th></tr></thead>
-                                <tbody id="planItemsContainer"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div id="subtab-setlist" class="subtab-content">
-                        <p style="font-size: 0.7rem; color: var(--text-labels); margin-bottom: 0.75rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">Añadir Música desde Biblioteca</p>
-                        
-                        <div class="form-group" style="position: relative; margin-bottom: 1.5rem;">
-                            <input type="text" id="searchSongsToServiceInput" placeholder="🔍 Escribe el nombre de la canción para agregar al setlist..." style="background: rgba(10,11,16,0.8); border: 1px solid rgba(255,255,255,0.08);">
-                            
-                            <div id="dropdownSongsResults" style="display:none; position: absolute; top: 100%; left: 0; right: 0; background: #12141d; border: 1px solid var(--border-window); border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></div>
-                        </div>
-                        
-                        <div class="section-divider" style="margin-top:0;">CANCIONES EN ESTE SERVICIO (Arrastra para reordenar)</div>
-                        
-                        <div id="songsContainerAdmin"></div>
-                    </div>
-
-
-
-                    <div id="subtab-equipo" class="subtab-content">
-                        <p style="font-size: 0.7rem; color: var(--text-labels); margin-bottom: 0.75rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">ASIGNACIÓN DE ROLES & BANDA</p>
-                        <p style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 1rem;">Asigna todos los instrumentos o tareas necesarias (Ej: Piano, Batería, Tele 1, Luces).</p>
-                        
-                        <div id="dynamicRolesContainer" style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem;"></div>
-
-                        <button type="button" id="btnAddCustomRole" class="btn-submit" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-main); padding: 0.6rem; margin-bottom: 1rem;">
-                            ➕ Añadir Rol / Instrumento
-                        </button>
-                        
-                        <button type="button" id="btnSaveTeam" class="btn-submit" style="padding: 0.7rem; background: var(--success); color: #050508;">Guardar Cambios del Equipo en la Nube</button>
-                    </div>
-
-                    <div id="subtab-bosquejo" class="subtab-content">
-    <div class="sketch-editor-container">
-        <p style="font-size:0.75rem; color:var(--text-labels); font-weight:600; text-transform:uppercase; margin-bottom: 0.75rem;">
-            Bosquejo Oficial del Servicio (Redactado por el Pastor):
-        </p>
-        
-        <div id="serviceSketch" contenteditable="false" style="width: 100%; min-height: 180px; max-height: 400px; overflow-y: auto; padding: 1.5rem; background-color: rgba(10, 11, 16, 0.3); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 14px; color: var(--text-main); font-size: 0.9rem; line-height: 1.6; outline: none; transition: all 0.3s ease;" placeholder="El pastor no ha redactado el bosquejo aún..."></div>
-        
-        <div style="display: flex; gap: 0.75rem; margin-top: 1rem; justify-content: flex-end;">
-            <button type="button" id="btnModoEdicionSketch" style="padding: 0.6rem 1.2rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); border-radius: 10px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                ✏️ Editar Notas
-            </button>
-            <button type="button" id="btnSaveSketch" class="btn-submit" style="padding: 0.6rem 1.5rem; width: auto; display: none; background: var(--success); color: #050508;">
-                Sincronizar Corrección ☁️
-            </button>
+                <button type="submit" class="btn-submit">CREAR SERVICIO</button>
+            </form>
         </div>
-    </div>
+
+        <div class="panel-window" id="col-cronograma-general">
+            <h3>Cronograma General</h3>
+            <p style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 1rem;">Selecciona un servicio para desglosar detalles.</p>
+            <div id="servicesContainer" class="services-list"></div>
+        </div>
+
+        <div class="panel-window" id="orderWindow" style="display: none;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 id="orderTitle" style="margin-bottom: 0;">Gestión del Servicio</h3>
+                <button type="button" id="btnCerrarGestion" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.1rem; font-weight: 700; transition: color 0.2s;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='var(--text-muted)'" title="Cerrar y volver a Crear Servicio">
+                    ✕
+                </button>
+            </div>
+            
+            <div class="subtabs-nav">
+                <button id="subbtn-escaleta" class="subtab-btn active" onclick="switchSubTab('subtab-escaleta')">SERVICIO</button>
+                <button id="subbtn-setlist" class="subtab-btn" onclick="switchSubTab('subtab-setlist')">SETLIST</button>
+                <button id="subbtn-equipo" class="subtab-btn" onclick="switchSubTab('subtab-equipo')">TEAM</button> 
+                <button id="subbtn-bosquejo" class="subtab-btn" onclick="switchSubTab('subtab-bosquejo')">BOSQUEJO</button>
+            </div>
+
+            <div id="subtab-escaleta" class="subtab-content active">
+                <form id="itemForm" style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
+                    <p style="font-size: 0.7rem; color: var(--text-labels); margin-bottom: 0.75rem; font-weight: 600; letter-spacing: 0.05em;">AGREGAR ELEMENTO MINUTO A MINUTO</p>
+                    <div class="form-group">
+                        <input type="text" id="itemTitle" required placeholder="Ej: Apertura, Ofrenda, Anuncios">
+                    </div>
+                    <div class="form-group">
+                        <input type="number" id="itemDuration" required placeholder="Duración en minutos (Ej: 15)">
+                    </div>
+                    <button type="submit" class="btn-submit" style="padding: 0.6rem;">+ Insertar Bloque</button>
+                </form>
+                <div class="table-responsive">
+                    <table class="plan-table">
+                        <thead><tr><th>Elemento</th><th style="text-align: right;">Duración</th></tr></thead>
+                        <tbody id="planItemsContainer"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="subtab-setlist" class="subtab-content">
+                <p style="font-size: 0.7rem; color: var(--text-labels); margin-bottom: 0.75rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">Añadir Música desde Biblioteca</p>
+                
+                <div class="form-group" style="position: relative; margin-bottom: 1.5rem;">
+                    <input type="text" id="searchSongsToServiceInput" placeholder="🔍 Escribe el nombre de la canción para agregar al setlist..." style="background: rgba(10,11,16,0.8); border: 1px solid rgba(255,255,255,0.08);">
+                    
+                    <div id="dropdownSongsResults" style="display:none; position: absolute; top: 100%; left: 0; right: 0; background: #12141d; border: 1px solid var(--border-window); border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></div>
+                </div>
+                
+                <div class="section-divider" style="margin-top:0;">CANCIONES EN ESTE SERVICIO (Arrastra para reordenar)</div>
+                
+                <div id="songsContainerAdmin"></div>
+            </div>
+
+            <div id="subtab-equipo" class="subtab-content">
+                <p style="font-size: 0.7rem; color: var(--text-labels); margin-bottom: 0.75rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">ASIGNACIÓN DE ROLES & BANDA</p>
+                <p style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 1rem;">Asigna todos los instrumentos o tareas necesarias (Ej: Piano, Batería, Tele 1, Luces).</p>
+                
+                <div id="dynamicRolesContainer" style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem;"></div>
+
+                <button type="button" id="btnAddCustomRole" class="btn-submit" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-main); padding: 0.6rem; margin-bottom: 1rem;">
+                    ➕ Añadir Rol / Instrumento
+                </button>
+                
+                <button type="button" id="btnSaveTeam" class="btn-submit" style="padding: 0.7rem; background: var(--success); color: #050508;">Guardar Cambios del Equipo en la Nube</button>
+            </div>
+
+            <div id="subtab-bosquejo" class="subtab-content">
+                <div class="sketch-editor-container">
+                    <p style="font-size:0.75rem; color:var(--text-labels); font-weight:600; text-transform:uppercase; margin-bottom: 0.75rem;">
+                        Bosquejo Oficial del Servicio (Redactado por el Pastor):
+                    </p>
+                    
+                    <div id="serviceSketch" contenteditable="false" style="width: 100%; min-height: 180px; max-height: 400px; overflow-y: auto; padding: 1.5rem; background-color: rgba(10, 11, 16, 0.3); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 14px; color: var(--text-main); font-size: 0.9rem; line-height: 1.6; outline: none; transition: all 0.3s ease;" placeholder="El pastor no ha redactado el bosquejo aún..."></div>
+                    
+                    <div style="display: flex; gap: 0.75rem; margin-top: 1rem; justify-content: flex-end;">
+                        <button type="button" id="btnModoEdicionSketch" style="padding: 0.6rem 1.2rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); border-radius: 10px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                            ✏️ Editar Notas
+                        </button>
+                        <button type="button" id="btnSaveSketch" class="btn-submit" style="padding: 0.6rem 1.5rem; width: auto; display: none; background: var(--success); color: #050508;">
+                            Sincronizar Corrección ☁️
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div> 
+    </div> 
 </div>
 
                 </div> </div> </div> <div id="people-section" class="tab-content">
@@ -1047,6 +1056,11 @@ if (serviceSketch) {
                     selectedServiceId = id;
                     orderTitle.innerText = `Gestión: ${service.title}`;
                     orderWindow.style.display = 'block';
+                    
+                    // 🌟 REGLA VISUAL RESPONSIVA INTERACTIVA
+                    const colCrearForm = document.getElementById('col-crear-servicio');
+                    if(colCrearForm) colCrearForm.style.display = 'none'; // Oculta Crear Servicio
+
                     actualizarDatosSuiteGestion(service);
                     orderWindow.scrollIntoView({ behavior: 'smooth' });
                 };
@@ -1070,6 +1084,11 @@ if (serviceSketch) {
                             if (selectedServiceId === idServicio) {
                                 selectedServiceId = null;
                                 orderWindow.style.display = 'none';
+                                
+                                // Volver a mostrar Crear Servicio si el activo fue borrado
+                                const colCrearForm = document.getElementById('col-crear-servicio');
+                                if(colCrearForm) colCrearForm.style.display = 'block';
+
                                 planItemsContainer.innerHTML = `<tr><td colspan="3" style="color: var(--text-muted); text-align: center; padding: 2rem;">No hay elementos añadidos aún.</td></tr>`;
                                 document.getElementById('songsContainerAdmin').innerHTML = `<p style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 1.5rem 1rem;">No hay canciones asignadas a este servicio.</p>`;
                                 if(document.getElementById('dynamicRolesContainer')) document.getElementById('dynamicRolesContainer').innerHTML = "";
@@ -1088,11 +1107,14 @@ if (serviceSketch) {
                     orderTitle.innerText = `Gestión: ${service.title}`;
                     actualizarDatosSuiteGestion(service);
 
-                    // 🛡️ Sincronización de seguridad inmediata para el Bosquejo
+                    // Ocultar Crear Servicio en persistencia de snapshot activo
+                    const colCrearForm = document.getElementById('col-crear-servicio');
+                    if(colCrearForm) colCrearForm.style.display = 'none';
+
+                    // Sincronización de seguridad para el Bosquejo
                     const cajaSketchRealTime = document.getElementById('serviceSketch');
                     if (cajaSketchRealTime) {
                         if (service.sketch) {
-                            // Forzamos a interpretar el HTML enriquecido del Pastor al instante
                             cajaSketchRealTime.innerHTML = service.sketch;
                         } else {
                             cajaSketchRealTime.innerHTML = `<span style="color:var(--text-muted); font-style:italic;">El pastor no ha redactado directrices ni bosquejos para este día aún.</span>`;
@@ -1383,6 +1405,34 @@ if (btnModoEdicion && btnGuardarCambios && cajaSketch) {
         grupos["Líderes"].push({ id, ...person });
     }
 });
+
+
+// ✕ ACCIÓN: CERRAR PANEL DE GESTIÓN Y MOSTRAR "CREAR SERVICIO" NUEVAMENTE
+        const btnCerrarGestion = document.getElementById('btnCerrarGestion');
+        if (btnCerrarGestion) {
+            btnCerrarGestion.addEventListener('click', () => {
+                selectedServiceId = null;
+                orderWindow.style.display = 'none';
+                
+                // Removemos la clase activa visual de la lista de reuniones
+                document.querySelectorAll('.service-item').forEach(el => el.classList.remove('active'));
+
+                const colCrearForm = document.getElementById('col-crear-servicio');
+                if (colCrearForm) colCrearForm.style.display = 'block'; // Regresa el formulario limpio
+            });
+        }
+
+        // CONTROL EXTRA: Si hace clic en las pestañas principales de arriba, valida el estado
+        const botonGeneralTab = document.getElementById('btn-services');
+        if (botonGeneralTab) {
+            botonGeneralTab.addEventListener('click', () => {
+                const colCrearForm = document.getElementById('col-crear-servicio');
+                if (!selectedServiceId && colCrearForm) {
+                    colCrearForm.style.display = 'block';
+                }
+            });
+        }
+
 
             Object.keys(grupos).forEach((categoria) => {
                 const listaPersonas = grupos[categoria];
