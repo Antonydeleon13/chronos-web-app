@@ -235,29 +235,33 @@
                 const user = userCredential.user;
 
                 // 1. Obtener el documento del usuario en Firestore
-const userDocRef = doc(db, "users", user.uid);
-const userDocSnap = await getDoc(userDocRef);
+                const userDocRef = doc(db, "users", user.uid);
+                const userDocSnap = await getDoc(userDocRef);
 
-if (userDocSnap.exists()) {
-    const userData = userDocSnap.data();
-    
-    /* 🌟 ACTUALIZACIÓN: Ahora leemos estrictamente el campo 'rol' 
-       y le aplicamos un limpiador para ignorar mayúsculas o espacios extra */
-    const userRole = userData.rol ? userData.rol.toLowerCase().trim() : '';
+                if (userDocSnap.exists()) {
+                    const userData = userDocSnap.data();
+                    
+                    // Normalizamos el rol para evitar fallos por mayúsculas o espacios
+                    const userRole = userData.rol ? userData.rol.toLowerCase().trim() : '';
 
-
-
-    if (userRole === 'admin' || userRole === 'pastor') {
-        window.location.href = 'admin.html';
-    } else if (userRole === 'volunteer' || userRole === 'voluntario') {
-        window.location.href = '/miembros.html'; // 🌟 Modificado para ir directo a tu portal de miembros
-    } else {
-        window.location.href = '/miembros.html';
-    }
-} else {
-    errorDiv.innerText = 'Este perfil no cuenta con privilegios de acceso en Chronos.';
-    errorDiv.style.display = 'block';
-}
+                    // 🔀 ENRUTADOR INTELIGENTE DE CHRONOS (CORREGIDO)
+                    if (userRole === 'admin') {
+                        window.location.href = 'admin.html'; // 👑 Panel de control general
+                    } 
+                    else if (userRole === 'pastor') {
+                        window.location.href = 'pastor.html'; // 🚀 Suite de redacción de sermones y Biblia
+                    } 
+                    else if (userRole === 'volunteer' || userRole === 'voluntario') {
+                        window.location.href = 'miembros.html'; // 👥 Portal de servidores en servicio
+                    } 
+                    else {
+                        window.location.href = 'miembros.html'; // Filtro de seguridad general
+                    }
+                    
+                } else {
+                    errorDiv.innerText = 'Este perfil no cuenta con privilegios de acceso en Chronos.';
+                    errorDiv.style.display = 'block';
+                }
 
             } catch (error) {
                 console.error("Error:", error);
