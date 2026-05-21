@@ -672,21 +672,22 @@ document.addEventListener('click', async (e) => {
             // Traducimos tu variable interna al idioma que exige esta API
             let translationParam = version === 'rvr1960' ? 'rvr1960' : version;
             
-            // URL limpia directa a bible-api usando el nombre del libro en inglés (que ya tienes en tus values del select)
-            const urlFinal = `https://bible-api.com/${libro}+${capitulo}:${rangoVersiculos}?translation=${translationParam}`;
+            // 1. Construimos la URL original que apunta a la Biblia
+            const urlOriginalBiblia = `https://bible-api.com/${libro}+${capitulo}:${rangoVersiculos}?translation=${translationParam}`;
 
-            // Realizamos la petición forzando el modo CORS explícito para producción
-            const respuesta = await fetch(urlFinal, {
-                method: 'GET',
-                mode: 'cors',
-                headers: { 'Accept': 'application/json' }
-            });
+            // 🚀 2. Envolvemos la URL original en el Proxy de AllOrigins para saltarnos el CORS de GitHub Pages
+            const urlConProxyCORS = `https://api.allorigins.win/get?url=${encodeURIComponent(urlOriginalBiblia)}`;
 
+            // Realizamos la petición al Proxy (este servidor intermedio siempre tiene el acceso abierto)
+            const respuesta = await fetch(urlConProxyCORS);
             if (!respuesta.ok) throw new Error();
             
-            const datos = await respuesta.json();
+            const contenedorProxy = await respuesta.json();
+            
+            // Extraemos y parseamos el string de datos JSON real que viene dentro de la propiedad '.contents'
+            const datos = JSON.parse(contenedorProxy.contents);
 
-            // Procesamos la respuesta de bible-api
+            // 3. Procesamos la respuesta de bible-api de forma idéntica a tu lógica original
             if (datos && datos.text) {
                 // Limpiamos los saltos de línea pesados que a veces trae el formato de texto antiguo
                 let textoCompletoBiblia = datos.text.replace(/\s+/g, ' ').trim();
@@ -711,8 +712,8 @@ document.addEventListener('click', async (e) => {
                 throw new Error();
             }
         } catch (err) {
-            console.error("Fallo en la consulta:", err);
-            preview.innerText = "❌ No se encontró la cita. Verifica que el libro tenga ese capítulo o número de versículo.";
+            console.error("Fallo en la consulta con Proxy:", err);
+            preview.innerText = "❌ No se encontró la cita o el servidor proxy está saturado. Verifica que el libro tenga ese capítulo o número.";
             preview.style.color = "var(--error)";
             btnInsertar.disabled = true;
             btnInsertar.style.background = "rgba(212, 163, 89, 0.2)";
