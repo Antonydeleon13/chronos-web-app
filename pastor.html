@@ -207,7 +207,7 @@
         </div>
     </div>
 
-    <script type="module">
+   <script type="module">
         import { auth, db } from "./firebase-config.js";
         import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
         import { collection, query, orderBy, onSnapshot, doc, getDoc, updateDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
@@ -224,14 +224,24 @@
             }
         });
 
-        function mostrarToast(mensaje) {
+        function mostrarToast(mensaje, tipo = 'success') {
             const toastText = document.getElementById('toastText');
             const toastIcon = document.getElementById('toastIcon');
-            toastText.innerText = mensaje;
-            toastNotification.style.borderLeft = "4px solid var(--success)";
-            toastIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-            toastNotification.style.transform = "translateY(0)";
-            setTimeout(() => { toastNotification.style.transform = "translateY(200%)"; }, 3000);
+            if (toastText) toastText.innerText = mensaje;
+            
+            if (toastIcon) {
+                if (tipo === 'success') {
+                    toastNotification.style.borderLeft = "4px solid var(--success)";
+                    toastIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                } else if (tipo === 'delete') {
+                    toastNotification.style.borderLeft = "4px solid #f87171";
+                    toastIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+                }
+            }
+            if (toastNotification) {
+                toastNotification.style.transform = "translateY(0)";
+                setTimeout(() => { toastNotification.style.transform = "translateY(200%)"; }, 3000);
+            }
         }
 
         // Funciones globales expuestas para ejecutar comandos de formato nativos
@@ -293,7 +303,37 @@
 
         // Renderizado Dinámico de la Suite del Pastor
         function renderizarSuitePastoral(service) {
-            workspaceWindow.innerHTML = `
+            const contenedorWorkspace = document.getElementById('workspaceWindow') || workspaceWindow;
+            
+            if (!contenedorWorkspace) {
+                console.error("❌ Error crítico: No se encontró el contenedor 'workspaceWindow' en el DOM.");
+                return;
+            }
+
+            contenedorWorkspace.innerHTML = `
+                <style>
+                    /* Ajuste responsivo para el contenedor de pestañas en móvil */
+                    @media (max-width: 768px) {
+                        .tabs-nav {
+                            display: flex;
+                            overflow-x: auto;
+                            gap: 0.35rem;
+                            padding-bottom: 0.5rem;
+                            scroll-behavior: smooth;
+                            -webkit-overflow-scrolling: touch;
+                        }
+                        .tab-btn {
+                            flex: initial;
+                            white-space: nowrap;
+                            font-size: 0.8rem !important;
+                            padding: 0.6rem 0.85rem !important;
+                        }
+                        .sketch-layout-grid {
+                            grid-template-columns: 1fr !important;
+                        }
+                    }
+                </style>
+
                 <div class="work-workspace">
                     <div>
                         <h3 style="margin-bottom:0.5rem; font-family:'Syne'; font-size:1.4rem;">${service.title}</h3>
@@ -303,6 +343,7 @@
                             <button class="tab-btn" id="btn-tab-bosquejo">Redactar Bosquejo</button>
                             <button class="tab-btn active" id="btn-tab-escaleta">Horario</button>
                             <button class="tab-btn" id="btn-tab-setlist">Setlist Músicos</button>
+                            <button class="tab-btn" id="btn-tab-equipo">Equipo en Servicio</button>
                         </div>
 
                         <div id="tab-content-escaleta" class="tab-content active">
@@ -328,79 +369,79 @@
                         </div>
 
                         <div id="tab-content-bosquejo" class="tab-content">
-    <div style="display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start;">
-        
-        <div class="sketch-editor-container">
-            <p style="font-size:0.75rem; color:var(--text-labels); font-weight:600; text-transform:uppercase; margin-bottom: 0.5rem;">
-                Escribe y da formato a las notas del mensaje (Se sincronizará en tiempo real):
-            </p>
-            
-            <div style="display: flex; gap: 0.4rem; background: rgba(255,255,255,0.02); padding: 0.5rem; border-radius: 12px 12px 0 0; border: 1px solid rgba(255,255,255,0.05); border-bottom: none; flex-wrap: wrap;">
-                <button type="button" onclick="ejecutarComandoEditor('bold')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); color: #fff; padding: 0.3rem 0.6rem; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem;">B</button>
-                <button type="button" onclick="ejecutarComandoEditor('italic')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); color: #fff; padding: 0.3rem 0.6rem; border-radius: 6px; font-style: italic; cursor: pointer; font-size: 0.85rem;">I</button>
-                <button type="button" onclick="ejecutarComandoEditor('underline')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); color: #fff; padding: 0.3rem 0.6rem; border-radius: 6px; text-decoration: underline; cursor: pointer; font-size: 0.85rem;">U</button>
-                
-                <div style="width: 1px; background: rgba(255,255,255,0.1); margin: 0 0.25rem;"></div>
-                
-                <select onchange="ejecutarComandoEditor('fontSize', this.value); this.value='';" style="background: #12141d; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.3rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
-                    <option value="" disabled selected>Tamaño</option>
-                    <option value="2">Pequeño</option>
-                    <option value="3">Normal</option>
-                    <option value="4">Grande</option>
-                    <option value="5">Título</option>
-                </select>
+                            <div class="sketch-layout-grid" style="display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start;">
+                                <div class="sketch-editor-container">
+                                    <p style="font-size:0.75rem; color:var(--text-labels); font-weight:600; text-transform:uppercase; margin-bottom: 0.5rem;">
+                                        Escribe y da formato a las notas del mensaje (Se sincronizará en tiempo real):
+                                    </p>
+                                    
+                                    <div style="display: flex; gap: 0.4rem; background: rgba(255,255,255,0.02); padding: 0.5rem; border-radius: 12px 12px 0 0; border: 1px solid rgba(255,255,255,0.05); border-bottom: none; flex-wrap: wrap;">
+                                        <button type="button" onclick="ejecutarComandoEditor('bold')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); color: #fff; padding: 0.3rem 0.6rem; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem;">B</button>
+                                        <button type="button" onclick="ejecutarComandoEditor('italic')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); color: #fff; padding: 0.3rem 0.6rem; border-radius: 6px; font-style: italic; cursor: pointer; font-size: 0.85rem;">I</button>
+                                        <button type="button" onclick="ejecutarComandoEditor('underline')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); color: #fff; padding: 0.3rem 0.6rem; border-radius: 6px; text-decoration: underline; cursor: pointer; font-size: 0.85rem;">U</button>
+                                        
+                                        <div style="width: 1px; background: rgba(255,255,255,0.1); margin: 0 0.25rem;"></div>
+                                        
+                                        <select onchange="ejecutarComandoEditor('fontSize', this.value); this.value='';" style="background: #12141d; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.3rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
+                                            <option value="" disabled selected>Tamaño</option>
+                                            <option value="2">Pequeño</option>
+                                            <option value="3">Normal</option>
+                                            <option value="4">Grande</option>
+                                            <option value="5">Título</option>
+                                        </select>
 
-                <div style="width: 1px; background: rgba(255,255,255,0.1); margin: 0 0.25rem;"></div>
+                                        <div style="width: 1px; background: rgba(255,255,255,0.1); margin: 0 0.25rem;"></div>
 
-                <button type="button" onclick="ejecutarComandoEditor('insertUnorderedList')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); color: #fff; padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">• Lista</button>
-            </div>
+                                        <button type="button" onclick="ejecutarComandoEditor('insertUnorderedList')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); color: #fff; padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">• Lista</button>
+                                    </div>
 
-            <div class="sketch-textarea" id="pastorSketchTextarea" contenteditable="true" style="height: calc(100vh - 390px); overflow-y: auto; background-color: rgba(10, 11, 16, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 0 0 16px 16px; padding: 1.5rem; color: var(--text-main); font-size: 0.95rem; line-height: 1.6; outline: none;" placeholder="Escribe aquí las notas del sermón..."></div>
-            
-            <button type="button" class="btn-save-sketch" id="btnPastorSaveSketch" style="margin-top: 1rem;">Publicar</button>
-        </div>
+                                    <div class="sketch-textarea" id="pastorSketchTextarea" contenteditable="true" style="height: calc(100vh - 390px); overflow-y: auto; background-color: rgba(10, 11, 16, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 0 0 16px 16px; padding: 1.5rem; color: var(--text-main); font-size: 0.95rem; line-height: 1.6; outline: none;" placeholder="Escribe aquí las notas del sermón..."></div>
+                                    
+                                    <button type="button" class="btn-save-sketch" id="btnPastorSaveSketch" style="margin-top: 1rem;">Publicar</button>
+                                </div>
 
-        <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 16px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; width: 100%;">
-            <h4 style="font-family: 'Syne', sans-serif; font-size: 0.9rem; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem; font-weight: 700; letter-spacing: 0.02em;">📖 BUSCADOR BÍBLICO</h4>
-            
-            <div class="form-group" style="margin-bottom: 0;">
-                <label style="display: block; font-size: 0.65rem; font-weight: 600; color: var(--text-labels); margin-bottom: 0.4rem; letter-spacing: 0.05em;">LIBRO</label>
-                <select id="bibleLibroSelect" style="width: 100%; padding: 0.6rem; font-size: 0.85rem; background: rgba(10, 11, 16, 0.5); border: 1px solid rgba(255,255,255,0.03); border-radius: 8px; color: #fff;">
-                    <option value="Genesis">Génesis</option><option value="Exodus">Éxodo</option><option value="Leviticus">Levítico</option><option value="Numbers">Números</option><option value="Deuteronomy">Deuteronomio</option><option value="Joshua">Josué</option><option value="Judges">Jueces</option><option value="Ruth">Rut</option><option value="1 Samuel">1 Samuel</option><option value="2 Samuel">2 Samuel</option><option value="1 Kings">1 Reyes</option><option value="2 Kings">2 Reyes</option><option value="1 Chronicles">1 Crónicas</option><option value="2 Chronicles">2 Crónicas</option><option value="Ezra">Esdras</option><option value="Nehemiah">Nehemías</option><option value="Esther">Ester</option><option value="Job">Job</option><option value="Psalms">Salmos</option><option value="Proverbs">Proverbios</option><option value="Ecclesiastes">Eclesiastés</option><option value="Song of Solomon">Cantares</option><option value="Isaiah">Isaías</option><option value="Jeremiah">Jeremías</option><option value="Lamentations">Lamentaciones</option><option value="Ezekiel">Ezequiel</option><option value="Daniel">Daniel</option><option value="Hosea">Oseas</option><option value="Joel">Joel</option><option value="Amos">Amós</option><option value="Obadiah">Abdías</option><option value="Jonah">Jonás</option><option value="Micah">Miqueas</option><option value="Nahum">Nahum</option><option value="Habakkuk">Habacuc</option><option value="Zephaniah">Sofonías</option><option value="Haggai">Hageo</option><option value="Zechariah">Zacarías</option><option value="Malachi">Malaquías</option><option value="Matthew">Mateo</option><option value="Mark">Marcos</option><option value="Luke">Lucas</option><option value="John">Juan</option><option value="Acts">Hechos</option><option value="Romans">Romanos</option><option value="1 Corinthians">1 Corintios</option><option value="2 Corinthians">2 Corintios</option><option value="Galatians">Gálatas</option><option value="Ephesians">Efesios</option><option value="Philippians">Filipenses</option><option value="Colossians">Colosenses</option><option value="1 Thessalonians">1 Tesalonicenses</option><option value="2 Thessalonians">2 Tesalonicenses</option><option value="1 Timothy">1 Timoteo</option><option value="2 Timothy">2 Timoteo</option><option value="Titus">Tito</option><option value="Philemon">Filemón</option><option value="Hebrews">Hebreos</option><option value="James">Santiago</option><option value="1 Peter">1 Pedro</option><option value="2 Peter">2 Pedro</option><option value="1 John">1 Juan</option><option value="2 John">2 Juan</option><option value="3 John">3 Juan</option><option value="Jude">Judas</option><option value="Revelation">Apocalipsis</option>
-                </select>
-            </div>
+                                <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 16px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; width: 100%;">
+                                    <h4 style="font-family: 'Syne', sans-serif; font-size: 0.9rem; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem; font-weight: 700; letter-spacing: 0.02em;">📖 BUSCADOR BÍBLICO</h4>
+                                    
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label style="display: block; font-size: 0.65rem; font-weight: 600; color: var(--text-labels); margin-bottom: 0.4rem; letter-spacing: 0.05em;">LIBRO</label>
+                                        <select id="bibleLibroSelect" style="width: 100%; padding: 0.6rem; font-size: 0.85rem; background: rgba(10, 11, 16, 0.5); border: 1px solid rgba(255,255,255,0.03); border-radius: 8px; color: #fff;">
+                                            <option value="Genesis">Génesis</option><option value="Exodus">Éxodo</option><option value="Leviticus">Levítico</option><option value="Numbers">Números</option><option value="Deuteronomy">Deuteronomio</option><option value="Joshua">Josué</option><option value="Judges">Jueces</option><option value="Ruth">Rut</option><option value="1 Samuel">1 Samuel</option><option value="2 Samuel">2 Samuel</option><option value="1 Kings">1 Reyes</option><option value="2 Kings">2 Reyes</option><option value="1 Chronicles">1 Crónicas</option><option value="2 Chronicles">2 Crónicas</option><option value="Ezra">Esdras</option><option value="Nehemiah">Nehemías</option><option value="Esther">Ester</option><option value="Job">Job</option><option value="Psalms">Salmos</option><option value="Proverbs">Proverbios</option><option value="Ecclesiastes">Eclesiastés</option><option value="Song of Solomon">Cantares</option><option value="Isaiah">Isaías</option><option value="Jeremiah">Jeremías</option><option value="Lamentations">Lamentaciones</option><option value="Ezekiel">Ezequiel</option><option value="Daniel">Daniel</option><option value="Hosea">Oseas</option><option value="Joel">Joel</option><option value="Amos">Amós</option><option value="Obadiah">Abdías</option><option value="Jonah">Jonás</option><option value="Micah">Miqueas</option><option value="Nahum">Nahum</option><option value="Habakkuk">Habacuc</option><option value="Zephaniah">Sofonías</option><option value="Haggai">Hageo</option><option value="Zechariah">Zacarías</option><option value="Malachi">Malaquías</option><option value="Matthew">Mateo</option><option value="Mark">Marcos</option><option value="Luke">Lucas</option><option value="John">Juan</option><option value="Acts">Hechos</option><option value="Romans">Romanos</option><option value="1 Corinthians">1 Corintios</option><option value="2 Corinthians">2 Corintios</option><option value="Galatians">Gálatas</option><option value="Ephesians">Efesios</option><option value="Philippians">Filipenses</option><option value="Colossians">Colosenses</option><option value="1 Thessalonians">1 Tesalonicenses</option><option value="2 Thessalonians">2 Tesalonicenses</option><option value="1 Timothy">1 Timoteo</option><option value="2 Timothy">2 Timoteo</option><option value="Titus">Tito</option><option value="Philemon">Filemón</option><option value="Hebrews">Hebreos</option><option value="James">Santiago</option><option value="1 Player">1 Pedro</option><option value="2 Peter">2 Pedro</option><option value="1 John">1 Juan</option><option value="2 John">2 Juan</option><option value="3 John">3 Juan</option><option value="Jude">Judas</option><option value="Revelation">Apocalipsis</option>
+                                        </select>
+                                    </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label style="display: block; font-size: 0.65rem; font-weight: 600; color: var(--text-labels); margin-bottom: 0.4rem; letter-spacing: 0.05em;">CITA (CAP:VER)</label>
-                    <input type="text" id="bibleCitaInput" placeholder="Ej: 3:16" style="width: 100%; padding: 0.6rem; font-size: 0.85rem; background: rgba(10, 11, 16, 0.5); border: 1px solid rgba(255,255,255,0.03); border-radius: 8px; color: #fff; outline: none;">
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label style="display: block; font-size: 0.65rem; font-weight: 600; color: var(--text-labels); margin-bottom: 0.4rem; letter-spacing: 0.05em;">VERSIÓN</label>
-                    <select id="bibleVersionSelect" style="width: 100%; padding: 0.6rem; font-size: 0.85rem; background: rgba(10, 11, 16, 0.5); border: 1px solid rgba(255,255,255,0.03); border-radius: 8px; color: #fff;">
-                        <option value="rvr1960">RVR1960</option>
-                        <option value="nvi">NVI</option>
-                        <option value="dhh">DHH</option>
-                    </select>
-                </div>
-            </div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                        <div class="form-group" style="margin-bottom: 0;">
+                                            <label style="display: block; font-size: 0.65rem; font-weight: 600; color: var(--text-labels); margin-bottom: 0.4rem; letter-spacing: 0.05em;">CITA (CAP:VER)</label>
+                                            <input type="text" id="bibleCitaInput" placeholder="Ej: 3:16" style="width: 100%; padding: 0.6rem; font-size: 0.85rem; background: rgba(10, 11, 16, 0.5); border: 1px solid rgba(255,255,255,0.03); border-radius: 8px; color: #fff; outline: none;">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom: 0;">
+                                            <label style="display: block; font-size: 0.65rem; font-weight: 600; color: var(--text-labels); margin-bottom: 0.4rem; letter-spacing: 0.05em;">VERSIÓN</label>
+                                            <select id="bibleVersionSelect" style="width: 100%; padding: 0.6rem; font-size: 0.85rem; background: rgba(10, 11, 16, 0.5); border: 1px solid rgba(255,255,255,0.03); border-radius: 8px; color: #fff;">
+                                                <option value="rvr1960">RVR1960</option>
+                                                <option value="nvi">NVI</option>
+                                                <option value="dhh">DHH</option>
+                                            </select>
+                                        </div>
+                                    </div>
 
-            <button type="button" id="btnBuscarBiblia" style="width: 100%; padding: 0.65rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">🔍 Consultar Cita</button>
+                                    <button type="button" id="btnBuscarBiblia" style="width: 100%; padding: 0.65rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">🔍 Consultar Cita</button>
 
-            <div id="bibleResultPreview" style="font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 10px; min-height: 80px; max-height: 160px; overflow-y: auto; line-height: 1.4; display: flex; align-items: center; justify-content: center; text-align: center;">
-                El versículo consultado aparecerá aquí...
-            </div>
+                                    <div id="bibleResultPreview" style="font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 10px; min-height: 80px; max-height: 160px; overflow-y: auto; line-height: 1.4; display: flex; align-items: center; justify-content: center; text-align: center;">
+                                        El versículo consultado aparecerá aquí...
+                                    </div>
 
-            <button type="button" id="btnInsertarVersiculo" disabled style="width: 100%; padding: 0.7rem; background: rgba(212, 163, 89, 0.15); border: 1px solid rgba(212, 163, 89, 0.3); color: #f3d081; border-radius: 10px; font-size: 0.8rem; font-weight: 700; cursor: not-allowed; transition: all 0.2s;">➕ Insertar al Bosquejo</button>
-        </div>
-    </div>
-</div>
+                                    <button type="button" id="btnInsertarVersiculo" disabled style="width: 100%; padding: 0.7rem; background: rgba(212, 163, 89, 0.15); border: 1px solid rgba(212, 163, 89, 0.3); color: #f3d081; border-radius: 10px; font-size: 0.8rem; font-weight: 700; cursor: not-allowed; transition: all 0.2s;">➕ Insertar al Bosquejo</button>
+                                </div>
+                            </div>
+                        </div>
 
+                        <div id="tab-content-equipo" class="tab-content" style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 16px; padding: 1.5rem;">
+                            <h4 style="font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--text-main); margin-bottom: 0.25rem;">EQUIPO EN SERVICIO</h4>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Lineup completo de Servidores asignados</p>
+                            <div id="teamContainerPastores" style="display: flex; flex-direction: column; gap: 0.65rem;"></div>
+                        </div>
 
-                    <div class="team-section" style="max-height: calc(100vh - 180px); overflow-y: auto;">
-                        <h4 style="font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; color: var(--text-main); margin-bottom: 0.5rem;">EQUIPO EN SERVICIO</h4>
-                        <p style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Lineup de Servidores</p>
-                        <div id="teamContainerPastores" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
                     </div>
                 </div>
             `;
@@ -411,13 +452,11 @@
             const txSketch = document.getElementById('pastorSketchTextarea');
             const btnSave = document.getElementById('btnPastorSaveSketch');
             
-            // Inyectamos el HTML enriquecido de Firestore usando innerHTML de forma segura
             if (txSketch) {
                 txSketch.innerHTML = service.sketch || "";
             }
 
             if (btnSave) {
-                // Clonar botón para prevenir duplicidad de Event Listeners en actualizaciones de snapshot
                 const btnClonado = btnSave.cloneNode(true);
                 btnSave.parentNode.replaceChild(btnClonado, btnSave);
 
@@ -428,7 +467,7 @@
                     try {
                         const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js");
                         await updateDoc(doc(db, "services", selectedServiceId), {
-                            sketch: txSketch.innerHTML // Guardamos la estructura HTML nativa enriquecida
+                            sketch: txSketch.innerHTML
                         });
                         mostrarToast("¡Bosquejo pastoral publicado y guardado con éxito! ☁️");
                     } catch (err) {
@@ -445,12 +484,13 @@
             const planContainer = document.getElementById('planContainerPastores');
             const plan = service.plan || [];
             if(plan.length === 0) {
-                planContainer.innerHTML = `<tr><td colspan="3" style="color:var(--text-muted); text-align:center; padding:2rem;">No hay bloques cronometrados aún.</td></tr>`;
+                if(planContainer) planContainer.innerHTML = `<tr><td colspan="3" style="color:var(--text-muted); text-align:center; padding:2rem;">No hay bloques cronometrados aún.</td></tr>`;
             } else {
                 let [horas, minutos] = (service.time || "18:00").split(":").map(Number);
                 let servicioBaseRef = new Date();
                 servicioBaseRef.setHours(horas, minutos, 0, 0);
 
+                if(planContainer) planContainer.innerHTML = "";
                 plan.forEach((item) => {
                     let duracionMinutos = Number(item.duration || 0);
                     let horaInicioPaso = new Date(servicioBaseRef.getTime());
@@ -471,16 +511,18 @@
                         claseFila = "past-item";
                     }
 
-                    planContainer.insertAdjacentHTML('beforeend', `
-                        <tr class="plan-row ${claseFila}">
-                            <td class="time-range-display">${stringInicio} - ${stringFin}</td>
-                            <td>
-                                <strong>${item.title}</strong>
-                                ${etiquetaEstado ? '<div style="margin-top:0.25rem;">' + etiquetaEstado + '</div>' : ''}
-                            </td>
-                            <td style="text-align:right;" class="plan-duration">${duracionMinutos} min</td>
-                        </tr>
-                    `);
+                    if(planContainer) {
+                        planContainer.insertAdjacentHTML('beforeend', `
+                            <tr class="plan-row ${claseFila}">
+                                <td class="time-range-display">${stringInicio} - ${stringFin}</td>
+                                <td>
+                                    <strong>${item.title}</strong>
+                                    ${etiquetaEstado ? '<div style="margin-top:0.25rem;">' + etiquetaEstado + '</div>' : ''}
+                                </td>
+                                <td style="text-align:right;" class="plan-duration">${duracionMinutos} min</td>
+                            </tr>
+                        `);
+                    }
                 });
             }
 
@@ -488,22 +530,25 @@
             const songsContainer = document.getElementById('songsContainerPastores');
             const setlist = service.setlist || [];
             if(setlist.length === 0) {
-                songsContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:2.5rem 1rem;">No hay canciones asignadas.</p>`;
+                if(songsContainer) songsContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:2.5rem 1rem;">No hay canciones asignadas.</p>`;
             } else {
+                if(songsContainer) songsContainer.innerHTML = "";
                 setlist.forEach((song, idx) => {
                     let btnPdf = song.pdf ? `<button onclick="abrirVisorPdfInterno('${song.pdf}', '${song.title}')" class="btn-mini-resource">Acordes.pdf</button>` : `<span style="color:rgba(255,255,255,0.03);">—</span>`;
                     let audioTrigger = song.audio ? `<audio id="audio-track-${idx}" controls src="${song.audio}"></audio>` : `<span style="color:rgba(255,255,255,0.03);">—</span>`;
 
-                    songsContainer.insertAdjacentHTML('beforeend', `
-                        <div class="song-track-item">
-                            <div class="col-title-zone">
-                                <span class="song-track-key">${song.key}</span>
-                                <span class="song-track-title">${song.title}</span>
+                    if(songsContainer) {
+                        songsContainer.insertAdjacentHTML('beforeend', `
+                            <div class="song-track-item">
+                                <div class="col-title-zone">
+                                    <span class="song-track-key">${song.key}</span>
+                                    <span class="song-track-title">${song.title}</span>
+                                </div>
+                                <div class="col-pdf-zone">${btnPdf}</div>
+                                <div class="col-audio-zone">${audioTrigger}</div>
                             </div>
-                            <div class="col-pdf-zone">${btnPdf}</div>
-                            <div class="col-audio-zone">${audioTrigger}</div>
-                        </div>
-                    `);
+                        `);
+                    }
                 });
             }
 
@@ -513,9 +558,9 @@
             const entradasRoles = Object.entries(rolesGuardados);
 
             if (entradasRoles.length === 0) {
-                teamContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.8rem; text-align:center; padding:1rem;">Ningún servidor asignado.</p>`;
+                if(teamContainer) teamContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.8rem; text-align:center; padding:1rem;">Ningún servidor asignado.</p>`;
             } else {
-                teamContainer.innerHTML = "";
+                if(teamContainer) teamContainer.innerHTML = "";
                 const procesarEquipoPastores = async () => {
                     const gruposAreas = {};
                     
@@ -535,6 +580,7 @@
                             let fotoPerfilUrl = "";
 
                             try {
+                                const { collection, query, where, getDocs } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js");
                                 const q = query(collection(db, "people"), where("fullName", "==", nombreVoluntario));
                                 const querySnapshot = await getDocs(q);
                                 if (!querySnapshot.empty) {
@@ -542,7 +588,7 @@
                                         const d = docSnap.data();
                                         areaDelVoluntario = d.serviceArea || "Miembro";
                                         esEncargado = d.isAreaLeader === true;
-                                        fotoPerfilUrl = d.avatar || "";
+                                        fotoPerfilUrl = d.avatarUrl || d.avatar || "";
                                     });
                                 }
                             } catch (err) { console.error(err); }
@@ -561,9 +607,11 @@
                     
                     ordenAreas.forEach(area => {
                         if (gruposAreas[area] && gruposAreas[area].length > 0) {
-                            teamContainer.insertAdjacentHTML('beforeend', `
-                                <div style="margin-top: 1rem; padding-left: 0.25rem; border-left: 2px solid rgba(255,255,255,0.15); font-family:'Syne'; font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase;">${area}</div>
-                            `);
+                            if(teamContainer) {
+                                teamContainer.insertAdjacentHTML('beforeend', `
+                                    <div style="margin-top: 1rem; padding-left: 0.25rem; border-left: 2px solid rgba(255,255,255,0.15); font-family:'Syne'; font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase;">${area}</div>
+                                `);
+                            }
 
                             gruposAreas[area].sort((a,b) => (a.lider ? -1 : 1) || a.nombre.localeCompare(b.nombre));
 
@@ -578,15 +626,17 @@
 
                                 const avatar = servidor.foto ? servidor.foto : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238e95a5'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5-3.33-8-3.33z'/></svg>";
 
-                                teamContainer.insertAdjacentHTML('beforeend', `
-                                    <div class="people-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.8rem; border-radius: 10px; ${cardStyle}">
-                                        <div style="display: flex; align-items: center; gap: 0.65rem; min-width: 0; flex: 1;">
-                                            <img src="${avatar}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
-                                            <span class="person-name" style="font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${servidor.nombre}</span>
+                                if(teamContainer) {
+                                    teamContainer.insertAdjacentHTML('beforeend', `
+                                        <div class="people-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.8rem; border-radius: 10px; ${cardStyle}">
+                                            <div style="display: flex; align-items: center; gap: 0.65rem; min-width: 0; flex: 1;">
+                                                <img src="${avatar}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                                                <span class="person-name" style="font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${servidor.nombre}</span>
+                                            </div>
+                                            <span class="person-role" style="font-size: 0.7rem; padding: 0.3rem 0.6rem; border-radius: 6px; ${badgeStyle}">${servidor.funcion}</span>
                                         </div>
-                                        <span class="person-role" style="font-size: 0.7rem; padding: 0.3rem 0.6rem; border-radius: 6px; ${badgeStyle}">${servidor.funcion}</span>
-                                    </div>
-                                `);
+                                    `);
+                                }
                             });
                         }
                     });
@@ -594,17 +644,26 @@
                 procesarEquipoPastores();
             }
 
-            // Activar intercambiador de pestañas de la Suite
-            const tabs = ['escaleta', 'setlist', 'bosquejo'];
+            // Activar intercambiador de pestañas de la Suite de forma segura sin duplicar listeners
+            const tabs = ['escaleta', 'setlist', 'bosquejo', 'equipo'];
             tabs.forEach(tab => {
-                document.getElementById(`btn-tab-${tab}`).addEventListener('click', () => {
-                    tabs.forEach(t => {
-                        document.getElementById(`btn-tab-${t}`).classList.remove('active');
-                        document.getElementById(`tab-content-${t}`).classList.remove('active');
+                const btnTab = document.getElementById(`btn-tab-${tab}`);
+                if (btnTab) {
+                    const btnLimpiado = btnTab.cloneNode(true);
+                    btnTab.parentNode.replaceChild(btnLimpiado, btnTab);
+
+                    btnLimpiado.addEventListener('click', () => {
+                        tabs.forEach(t => {
+                            const b = document.getElementById(`btn-tab-${t}`);
+                            const c = document.getElementById(`tab-content-${t}`);
+                            if (b) b.classList.remove('active');
+                            if (c) c.classList.remove('active');
+                        });
+                        btnLimpiado.classList.add('active');
+                        const targetContent = document.getElementById(`tab-content-${tab}`);
+                        if (targetContent) targetContent.classList.add('active');
                     });
-                    document.getElementById(`btn-tab-${tab}`).classList.add('active');
-                    document.getElementById(`tab-content-${tab}`).classList.add('active');
-                });
+                }
             });
         }
 
@@ -625,153 +684,144 @@
         document.getElementById('btnLogout').addEventListener('click', () => signOut(auth));
 
 
+        // ==========================================================================
+        // 📖 MOTOR BÍBLICO E INSERCIÓN DINÁMICA DE VERSÍCULOS (APIS COMPLETA)
+        // ==========================================================================
+        let HTMLVersiculoCargado = ""; // Almacén temporal del fragmento formateado
+        let ultimaSeleccionCursor = null; // Almacena la posición exacta del cursor
 
-
-      // ==========================================================================
-// 📖 MOTOR BÍBLICO E INSERCIÓN DINÁMICA DE VERSÍCULOS (APIS COMPLETA)
-// ==========================================================================
-let HTMLVersiculoCargado = ""; // Almacén temporal del fragmento formateado
-let ultimaSeleccionCursor = null; // Almacena la posición exacta del cursor
-
-// Guardar la posición del cursor cada vez que el pastor hace clic o escribe en su blog
-document.addEventListener('selectionchange', () => {
-    const selector = window.getSelection();
-    const cajaTexto = document.getElementById('pastorSketchTextarea');
-    
-    if (selector.rangeCount > 0 && cajaTexto && cajaTexto.contains(selector.anchorNode)) {
-        ultimaSeleccionCursor = selector.getRangeAt(0).cloneRange();
-    }
-});
-
-// Escuchador global para delegar los clics de la Biblia de forma segura
-document.addEventListener('click', async (e) => {
-    
-    // 🔍 ACCIÓN: CLICK EN "CONSULTAR CITA"
-    if (e.target && e.target.id === 'btnBuscarBiblia') {
-        const libro = document.getElementById('bibleLibroSelect').value;
-        const cita = document.getElementById('bibleCitaInput').value.trim();
-        const version = document.getElementById('bibleVersionSelect').value;
-        const btnBuscar = document.getElementById('btnBuscarBiblia');
-        const preview = document.getElementById('bibleResultPreview');
-        const btnInsertar = document.getElementById('btnInsertarVersiculo');
-
-        if(!cita || !cita.includes(':')) {
-            preview.innerText = "⚠️ Escribe la cita correctamente usando dos puntos (Ej: 3:16).";
-            preview.style.color = "var(--error)";
-            return;
-        }
-
-        btnBuscar.disabled = true;
-        btnBuscar.innerText = "Buscando en las Escrituras...";
-        preview.style.color = "var(--text-muted)";
-        preview.innerText = "Consultando base de datos bíblica...";
-
-        try {
-            const [capitulo, rangoVersiculos] = cita.split(':');
+        // Guardar la posición del cursor cada vez que el pastor hace clic o escribe en su blog
+        document.addEventListener('selectionchange', () => {
+            const selector = window.getSelection();
+            const cajaTexto = document.getElementById('pastorSketchTextarea');
             
-            // Normalizamos la versión para la API de Deno (rv1960, nvi, dhh)
-            let versionApi = version === 'rvr1960' ? 'rv1960' : version.toLowerCase();
+            if (selector.rangeCount > 0 && cajaTexto && cajaTexto.contains(selector.anchorNode)) {
+                ultimaSeleccionCursor = selector.getRangeAt(0).cloneRange();
+            }
+        });
 
-            // Endpoint directo a la API de Deno que probamos con éxito en tu consola
-            const urlFinal = `https://bible-api.deno.dev/api/read/${versionApi}/${libro.toLowerCase()}/${capitulo}/${rangoVersiculos}`;
-
-            const respuesta = await fetch(urlFinal);
-            if (!respuesta.ok) throw new Error("Error en la respuesta del servidor bíblico.");
+        // Escuchador global para delegar los clics de la Biblia de forma segura
+        document.addEventListener('click', async (e) => {
             
-            const datos = await respuesta.json();
+            // 🔍 ACCIÓN: CLICK EN "CONSULTAR CITA"
+            if (e.target && e.target.id === 'btnBuscarBiblia') {
+                const inputCitaElement = document.getElementById('bibleCitaInput');
+                if (!inputCitaElement) return;
 
-            let textoCompletoBiblia = "";
-            
-            // 🔍 EXTRACTOR ADAPTADO A TU CONSOLA REAL:
-            if (datos) {
-                if (datos.verse) {
-                    textoCompletoBiblia = datos.verse; // Caso exitoso de tu consola (un solo versículo)
-                } else if (datos.vers) {
-                    // Si es un rango (ej: 1-3), Deno suele mandar un Array en 'vers'
-                    if (Array.isArray(datos.vers)) {
-                        textoCompletoBiblia = datos.vers.map(v => v.text).join(" ");
-                    } else {
-                        textoCompletoBiblia = datos.vers.text || datos.vers;
+                const libro = document.getElementById('bibleLibroSelect').value;
+                const cita = inputCitaElement.value.trim();
+                const version = document.getElementById('bibleVersionSelect').value;
+                const btnBuscar = document.getElementById('btnBuscarBiblia');
+                const preview = document.getElementById('bibleResultPreview');
+                const btnInsertar = document.getElementById('btnInsertarVersiculo');
+
+                if(!cita || !cita.includes(':')) {
+                    preview.innerText = "⚠️ Escribe la cita correctamente usando dos puntos (Ej: 3:16).";
+                    preview.style.color = "var(--error)";
+                    return;
+                }
+
+                btnBuscar.disabled = true;
+                btnBuscar.innerText = "Buscando en las Escrituras...";
+                preview.style.color = "var(--text-muted)";
+                preview.innerText = "Consultando base de datos bíblica...";
+
+                try {
+                    const [capitulo, rangoVersiculos] = cita.split(':');
+                    
+                    let versionApi = version === 'rvr1960' ? 'rv1960' : version.toLowerCase();
+
+                    const urlFinal = `https://bible-api.deno.dev/api/read/${versionApi}/${libro.toLowerCase()}/${capitulo}/${rangoVersiculos}`;
+
+                    const respuesta = await fetch(urlFinal);
+                    if (!respuesta.ok) throw new Error("Error en la respuesta del servidor bíblico.");
+                    
+                    const datos = await respuesta.json();
+
+                    let textoCompletoBiblia = "";
+                    
+                    if (datos) {
+                        if (datos.verse) {
+                            textoCompletoBiblia = datos.verse;
+                        } else if (datos.vers) {
+                            if (Array.isArray(datos.vers)) {
+                                textoCompletoBiblia = datos.vers.map(v => v.text).join(" ");
+                            } else {
+                                textoCompletoBiblia = datos.vers.text || datos.vers;
+                            }
+                        } else if (datos.text) {
+                            textoCompletoBiblia = datos.text;
+                        }
                     }
-                } else if (datos.text) {
-                    textoCompletoBiblia = datos.text;
+
+                    if (!textoCompletoBiblia || typeof textoCompletoBiblia !== 'string') {
+                        throw new Error("Formato de respuesta no reconocido.");
+                    }
+
+                    textoCompletoBiblia = textoCompletoBiblia.replace(/\s+/g, ' ').trim();
+
+                    const selectorTexto = document.getElementById('bibleLibroSelect');
+                    const nombreLibroEspanol = selectorTexto.options[selectorTexto.selectedIndex].text;
+                    const referenciaFormateada = `${nombreLibroEspanol} ${capitulo}:${rangoVersiculos} (${version.toUpperCase()})`;
+
+                    HTMLVersiculoCargado = `<br><blockquote style="border-left: 3px solid #d4a359; padding-left: 1rem; margin: 0.75rem 0; color: #e2e8f0; font-style: italic;"><b>${referenciaFormateada}:</b> "${textoCompletoBiblia}"</blockquote><br>`;
+                    
+                    preview.style.textAlign = "left";
+                    preview.innerHTML = `<b>${referenciaFormateada}:</b> "${textoCompletoBiblia}"`;
+                    
+                    btnInsertar.disabled = false;
+                    btnInsertar.style.background = "linear-gradient(135deg, #f3d081 0%, #d4a359 100%)";
+                    btnInsertar.style.color = "#08090d";
+                    btnInsertar.style.cursor = "pointer";
+
+                } catch (err) {
+                    console.error("Fallo definitivo en la consulta:", err);
+                    
+                    preview.innerText = "❌ No se encontró la cita o la estructura cambió. Verifica los números tecleados (Ej: 1:1 o 3:16).";
+                    preview.style.color = "var(--error)";
+                    preview.style.textAlign = "center";
+                    
+                    btnInsertar.disabled = true;
+                    btnInsertar.style.background = "rgba(212, 163, 89, 0.2)";
+                    btnInsertar.style.color = "#f3d081";
+                    btnInsertar.style.cursor = "not-allowed";
+                } finally {
+                    btnBuscar.disabled = false;
+                    btnBuscar.innerText = "🔍 Consultar Cita";
                 }
             }
 
-            // Si no se pudo mapear texto válido, lanzamos el error
-            if (!textoCompletoBiblia || typeof textoCompletoBiblia !== 'string') {
-                throw new Error("Formato de respuesta no reconocido.");
+            // ➕ ACCIÓN: CLICK EN "INSERTAR AL BOSQUEJO"
+            if (e.target && e.target.id === 'btnInsertarVersiculo') {
+                const cajaTexto = document.getElementById('pastorSketchTextarea');
+                if (!cajaTexto || !HTMLVersiculoCargado) return;
+
+                cajaTexto.focus();
+                const selector = window.getSelection();
+
+                if (ultimaSeleccionCursor) {
+                    selector.removeAllRanges();
+                    selector.addRange(ultimaSeleccionCursor);
+                }
+
+                const fragmentoHTML = selector.getRangeAt(0).createContextualFragment(HTMLVersiculoCargado);
+                selector.getRangeAt(0).insertNode(fragmentoHTML);
+                selector.collapseToEnd();
+
+                document.getElementById('bibleCitaInput').value = "";
+                document.getElementById('bibleResultPreview').innerHTML = "¡Versículo insertado con éxito! Puedes buscar otro.";
+                document.getElementById('bibleResultPreview').style.textAlign = "center";
+                
+                const btnInsertar = document.getElementById('btnInsertarVersiculo');
+                btnInsertar.disabled = true;
+                btnInsertar.style.background = "rgba(212, 163, 89, 0.2)";
+                btnInsertar.style.color = "#f3d081";
+                btnInsertar.style.cursor = "not-allowed";
+                
+                HTMLVersiculoCargado = "";
+                cajaTexto.dispatchEvent(new Event('input'));
             }
-
-            // Limpiamos los espacios y saltos de línea molestos
-            textoCompletoBiblia = textoCompletoBiblia.replace(/\s+/g, ' ').trim();
-
-            // Formateamos la cita en español para la previsualización del Pastor
-            const selectorTexto = document.getElementById('bibleLibroSelect');
-            const nombreLibroEspanol = selectorTexto.options[selectorTexto.selectedIndex].text;
-            const referenciaFormateada = `${nombreLibroEspanol} ${capitulo}:${rangoVersiculos} (${version.toUpperCase()})`;
-
-            // Guardamos el fragmento con diseño premium dorado para inyectar en el blog
-            HTMLVersiculoCargado = `<br><blockquote style="border-left: 3px solid #d4a359; padding-left: 1rem; margin: 0.75rem 0; color: #e2e8f0; font-style: italic;"><b>${referenciaFormateada}:</b> "${textoCompletoBiblia}"</blockquote><br>`;
-            
-            preview.style.textAlign = "left";
-            preview.innerHTML = `<b>${referenciaFormateada}:</b> "${textoCompletoBiblia}"`;
-            
-            // Desbloqueamos el botón dorado de inserción
-            btnInsertar.disabled = false;
-            btnInsertar.style.background = "linear-gradient(135deg, #f3d081 0%, #d4a359 100%)";
-            btnInsertar.style.color = "#08090d";
-            btnInsertar.style.cursor = "pointer";
-
-        } catch (err) {
-            console.error("Fallo definitivo en la consulta:", err);
-            
-            preview.innerText = "❌ No se encontró la cita o la estructura cambió. Verifica los números tecleados (Ej: 1:1 o 3:16).";
-            preview.style.color = "var(--error)";
-            preview.style.textAlign = "center";
-            
-            btnInsertar.disabled = true;
-            btnInsertar.style.background = "rgba(212, 163, 89, 0.2)";
-            btnInsertar.style.color = "#f3d081";
-            btnInsertar.style.cursor = "not-allowed";
-        } finally {
-            btnBuscar.disabled = false;
-            btnBuscar.innerText = "🔍 Consultar Cita";
-        }
-    }
-
-    // ➕ ACCIÓN: CLICK EN "INSERTAR AL BOSQUEJO"
-    if (e.target && e.target.id === 'btnInsertarVersiculo') {
-        const cajaTexto = document.getElementById('pastorSketchTextarea');
-        if (!cajaTexto || !HTMLVersiculoCargado) return;
-
-        cajaTexto.focus();
-        const selector = window.getSelection();
-
-        if (ultimaSeleccionCursor) {
-            selector.removeAllRanges();
-            selector.addRange(ultimaSeleccionCursor);
-        }
-
-        const fragmentoHTML = selector.getRangeAt(0).createContextualFragment(HTMLVersiculoCargado);
-        selector.getRangeAt(0).insertNode(fragmentoHTML);
-        selector.collapseToEnd();
-
-        document.getElementById('bibleCitaInput').value = "";
-        document.getElementById('bibleResultPreview').innerHTML = "¡Versículo insertado con éxito! Puedes buscar otro.";
-        document.getElementById('bibleResultPreview').style.textAlign = "center";
-        
-        const btnInsertar = document.getElementById('btnInsertarVersiculo');
-        btnInsertar.disabled = true;
-        btnInsertar.style.background = "rgba(212, 163, 89, 0.2)";
-        btnInsertar.style.color = "#f3d081";
-        btnInsertar.style.cursor = "not-allowed";
-        
-        HTMLVersiculoCargado = "";
-        cajaTexto.dispatchEvent(new Event('input'));
-    }
-});
-
+        });
     </script>
 </body>
 </html>
