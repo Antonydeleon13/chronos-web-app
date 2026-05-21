@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronos — Portal Pastoral</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #08090d;
+            --window-bg: rgba(18, 20, 29, 0.65);
+            --text-main: #ffffff;
+            --text-muted: #8e95a5;
+            --text-labels: #94a3b8;
+            --border-window: rgba(255, 255, 255, 0.06);
+            --accent-gradient: linear-gradient(135deg, #ffffff 0%, #a3a3a3 100%);
+            --success: #34d399;
+            --primary-btn: rgba(255, 255, 255, 0.08);
+            --error: #f87171;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Navbar Superior */
+        .top-navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.25rem 2rem; background: rgba(8, 9, 13, 0.6);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-window); position: sticky; top: 0; z-index: 100;
+        }
+        .nav-brand { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.25rem; letter-spacing: -0.02em; }
+        .nav-profile { display: flex; align-items: center; gap: 1rem; }
+        .user-tag { font-size: 0.75rem; font-weight: 600; color: #34d399; background: rgba(52, 211, 153, 0.05); padding: 0.35rem 0.75rem; border-radius: 20px; border: 1px solid rgba(52, 211, 153, 0.15); }
+        .btn-logout { background: transparent; border: none; color: var(--text-muted); font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: color 0.2s; }
+        .btn-logout:hover { color: var(--error); }
+
+        /* Contenedor de la Suite Principal */
+        .portal-container {
+            flex: 1; display: grid; grid-template-columns: 320px 1fr; gap: 2rem;
+            max-width: 1600px; width: 100%; margin: 0 auto; padding: 2rem;
+        }
+
+        /* Bloques de Ventanas */
+        .panel-window {
+            background: var(--window-bg); border: 1px solid var(--border-window);
+            border-radius: 24px; padding: 2rem; height: calc(100vh - 180px);
+            display: flex; flex-direction: column; overflow: hidden;
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+        }
+        .panel-window h3 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.25rem; margin-bottom: 1.5rem; letter-spacing: -0.01em; }
+
+        /* Lista de Cultos Izquierda */
+        .scrollable-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; padding-right: 0.25rem; }
+        .scrollable-list::-webkit-scrollbar { width: 6px; }
+        .scrollable-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
+
+        .service-item {
+            background: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.02);
+            border-radius: 16px; padding: 1.2rem; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .service-item:hover { background: rgba(255, 255, 255, 0.03); border-color: rgba(255, 255, 255, 0.06); transform: translateY(-1px); }
+        .service-item.active { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.15); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .service-info h5 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.25rem; }
+        .service-info p { font-size: 0.75rem; color: var(--text-muted); }
+        .service-meta { text-align: right; font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+        .service-time { color: var(--text-labels); font-weight: 600; margin-top: 0.15rem; }
+
+        /* Workspace Derecha */
+        .work-workspace { flex: 1; overflow-y: auto; display: grid; grid-template-columns: 1fr 340px; gap: 2rem; padding-right: 0.25rem; }
+        .work-workspace::-webkit-scrollbar { width: 6px; }
+        .work-workspace::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
+
+        /* Pestañas */
+        .tabs-nav { display: flex; gap: 0.5rem; background: rgba(0, 0, 0, 0.2); padding: 0.35rem; border-radius: 14px; margin-bottom: 1.75rem; border: 1px solid rgba(255,255,255,0.01); }
+        .tab-btn { flex: 1; background: transparent; border: none; color: var(--text-muted); font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 600; cursor: pointer; padding: 0.65rem; border-radius: 10px; transition: all 0.2s; }
+        .tab-btn:hover { color: var(--text-main); }
+        .tab-btn.active { color: #ffffff; background: rgba(255, 255, 255, 0.06); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Tablas */
+        .plan-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .plan-table th { font-size: 0.7rem; color: var(--text-labels); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; padding: 1rem; border-bottom: 2px solid rgba(255, 255, 255, 0.04); }
+        .plan-row td { padding: 1.25rem 1rem !important; border-bottom: 1px solid rgba(255, 255, 255, 0.02) !important; font-size: 0.875rem; vertical-align: middle; }
+        .plan-duration { font-family: 'Inter', sans-serif; font-weight: 500; color: var(--text-muted); font-size: 0.825rem; }
+        .plan-row.live-now { background: rgba(52, 211, 153, 0.04) !important; box-shadow: inset 3px 0 0 var(--success); }
+        .plan-row.live-now td { color: #ffffff; }
+        .plan-row.past-item { opacity: 0.45; }
+        
+        .live-badge { display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(52, 211, 153, 0.12); color: var(--success); padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700; }
+        .time-range-display { font-family: 'Inter', sans-serif; font-weight: 600; color: var(--text-labels); font-size: 0.85rem; }
+        .live-now .time-range-display { color: var(--success); }
+
+        /* Setlist Rejilla Unificada */
+        .setlist-header-row, .song-track-item { display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 1rem 0.75rem !important; border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important; gap: 1.5rem !important; }
+        .setlist-header-row { color: var(--text-labels); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; border-bottom: 2px solid rgba(255, 255, 255, 0.04) !important; }
+        
+        .col-title-zone { flex: 1.5 !important; min-width: 0; display: flex; align-items: center; gap: 0.75rem; }
+        .col-pdf-zone { width: 120px !important; text-align: center !important; flex-shrink: 0 !important; display: flex; justify-content: center; }
+        .col-audio-zone { width: 320px !important; text-align: center !important; flex-shrink: 0 !important; display: flex; justify-content: center; align-items: center; }
+        .col-audio-zone audio { width: 100% !important; height: 30px !important; border-radius: 8px !important; outline: none; }
+        
+        .song-track-title { font-size: 0.875rem; font-weight: 600; color: #ffffff; }
+        .song-track-key { background: rgba(52, 211, 153, 0.08); color: var(--success); padding: 0.2rem 0.45rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(52, 211, 153, 0.15); display: inline-block; }
+        .btn-mini-resource { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: var(--text-muted); padding: 0.4rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s; }
+        .btn-mini-resource:hover { background: rgba(255, 255, 255, 0.08); color: #ffffff; }
+
+        /* 👑 AREA EXCLUSIVA: EDITOR DE BOSQUEJO PASTORAL */
+        .sketch-editor-container { display: flex; flex-direction: column; gap: 1rem; }
+        .sketch-textarea {
+            width: 100%; height: calc(100vh - 350px); min-height: 300px;
+            padding: 1.5rem; background-color: rgba(10, 11, 16, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px;
+            color: var(--text-main); font-family: inherit; font-size: 0.95rem;
+            line-height: 1.6; resize: none; outline: none; transition: border-color 0.3s;
+        }
+        .sketch-textarea:focus { border-color: rgba(52, 211, 153, 0.4); background-color: rgba(10, 11, 16, 0.7); }
+        .btn-save-sketch {
+            align-self: flex-end; padding: 0.8rem 2rem; background-color: var(--success);
+            color: #050508; border: none; border-radius: 12px; font-size: 0.85rem;
+            font-weight: 600; cursor: pointer; transition: all 0.2s ease;
+        }
+        .btn-save-sketch:hover { background-color: #2bb57e; transform: translateY(-1px); }
+
+        /* Lateral Equipo */
+        .team-section { background: rgba(255, 255, 255, 0.01); border-radius: 20px; padding: 1.5rem; border: 1px solid rgba(255, 255, 255, 0.02); display: flex; flex-direction: column; gap: 1rem; }
+        .people-row { display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.8rem; border-radius: 10px; gap: 0.75rem; margin-bottom: 0.3rem; }
+        .person-name { font-size: 0.85rem; font-weight: 600; color: #ffffff; }
+        .person-role { font-size: 0.7rem; font-weight: 600; padding: 0.3rem 0.6rem; border-radius: 6px; }
+
+        /* Toasts interactivos de guardado */
+        #toastNotification {
+            position: fixed; bottom: 2rem; right: 2rem; background: rgba(18, 20, 29, 0.9);
+            backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 1rem 1.5rem; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex; align-items: center; gap: 0.75rem; z-index: 9999;
+            transform: translateY(200%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .empty-workspace-state { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: var(--text-muted); font-size: 0.85rem; text-align: center; gap: 0.5rem; }
+
+        /* Responsividad Móvil */
+        @media (max-width: 1100px) {
+            .portal-container { grid-template-columns: 1fr; padding: 1rem; }
+            .panel-window { height: auto; max-height: 500px; }
+            .work-workspace { grid-template-columns: 1fr; }
+            .setlist-header-row { display: none !important; }
+            .song-track-item { display: flex !important; flex-direction: column !important; align-items: flex-start !important; background: rgba(255, 255, 255, 0.01) !important; border: 1px solid rgba(255, 255, 255, 0.03) !important; border-radius: 16px !important; padding: 1.25rem !important; gap: 1rem !important; width: 100% !important; }
+            .col-title-zone, .col-pdf-zone, .col-audio-zone { width: 100% !important; justify-content: flex-start !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-navbar">
+        <div class="nav-brand">CHRONOS</div>
+        <div class="nav-profile">
+            <div class="user-tag">PORTAL PASTORAL</div>
+            <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div class="portal-container">
+        
+        <div class="panel-window">
+            <h3>Servicios</h3>
+            <div class="scrollable-list" id="servicesContainer">
+                <div class="empty-workspace-state">Cargando cronogramas pastorales...</div>
+            </div>
+        </div>
+
+        <div class="panel-window" id="workspaceWindow">
+            <div class="empty-workspace-state">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.4; margin-bottom:0.5rem;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                Selecciona un servicio del listado para desplegar el control de horarios y redactar tu Bosquejo.
+            </div>
+        </div>
+
+    </div>
+
+    <div id="toastNotification">
+        <div id="toastIcon" style="font-size: 1.1rem; display: flex; align-items: center;"></div>
+        <div id="toastText" style="font-size: 0.875rem; font-weight: 500; color: #ffffff;"></div>
+    </div>
+
+    <div id="pdfModalInternal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5, 5, 8, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: flex; flex-direction: column; z-index: 5000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: rgba(18, 20, 29, 0.9); border-bottom: 1px solid var(--border-window);">
+            <h4 id="pdfModalTitle" style="font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: #fff;">Visualizador de Cifrados</h4>
+            <button onclick="cerrarVisorPdfInterno()" style="background: rgba(248, 113, 113, 0.15); border: 1px solid rgba(248, 113, 113, 0.2); color: #f87171; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">✕ Cerrar Visor</button>
+        </div>
+        <div style="flex: 1; width: 100%; height: 100%; background: #12141d;">
+            <iframe id="pdfInternalFrame" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db } from "./firebase-config.js";
+        import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { collection, query, orderBy, onSnapshot, doc, getDoc, updateDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        let selectedServiceId = null;
+        const servicesContainer = document.getElementById('servicesContainer');
+        const workspaceWindow = document.getElementById('workspaceWindow');
+        const toastNotification = document.getElementById('toastNotification');
+
+        // Comprobación de seguridad básica y Auth
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = '/index.html';
+            }
+        });
+
+        function mostrarToast(mensaje) {
+            const toastText = document.getElementById('toastText');
+            const toastIcon = document.getElementById('toastIcon');
+            toastText.innerText = mensaje;
+            toastNotification.style.borderLeft = "4px solid var(--success)";
+            toastIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            toastNotification.style.transform = "translateY(0)";
+            setTimeout(() => { toastNotification.style.transform = "translateY(200%)"; }, 3000);
+        }
+
+        // Funciones globales expuestas para ejecutar comandos de formato nativos
+        window.ejecutarComandoEditor = function(comando, valor = null) {
+            document.execCommand(comando, false, valor);
+            const textarea = document.getElementById('pastorSketchTextarea');
+            if (textarea) textarea.focus(); // Mantener el foco de forma segura
+        };
+
+        // Escucha en tiempo real de los servicios agregados por el Admin
+        const qServices = query(collection(db, "services"), orderBy("date", "asc"));
+        onSnapshot(qServices, (snapshot) => {
+            servicesContainer.innerHTML = "";
+
+            if(snapshot.empty) {
+                servicesContainer.innerHTML = `<div class="empty-workspace-state">No hay servicios programados.</div>`;
+                return;
+            }
+
+            snapshot.forEach((docSnap) => {
+                const id = docSnap.id;
+                const service = docSnap.data();
+
+                let fechaGuatemala = 'N/A';
+                if (service.date && service.date.includes('-')) {
+                    const pts = service.date.split('-');
+                    fechaGuatemala = `${pts[2]}/${pts[1]}/${pts[0]}`;
+                }
+
+                let horaGuatemala = service.time || 'N/A';
+
+                const item = document.createElement('div');
+                item.className = `service-item ${id === selectedServiceId ? 'active' : ''}`;
+                item.innerHTML = `
+                    <div class="service-info">
+                        <h5>${service.title}</h5>
+                        <p>Reunión General</p>
+                    </div>
+                    <div class="service-meta">
+                        <div>${fechaGuatemala}</div>
+                        <div class="service-time">${horaGuatemala} hrs</div>
+                    </div>
+                `;
+
+                item.addEventListener('click', () => {
+                    selectedServiceId = id;
+                    document.querySelectorAll('.service-item').forEach(el => el.classList.remove('active'));
+                    item.classList.add('active');
+                    renderizarSuitePastoral(service);
+                });
+
+                servicesContainer.appendChild(item);
+
+                if(id === selectedServiceId) {
+                    renderizarSuitePastoral(service);
+                }
+            });
+        });
+
+        // Renderizado Dinámico de la Suite del Pastor
+        function renderizarSuitePastoral(service) {
+            workspaceWindow.innerHTML = `
+                <div class="work-workspace">
+                    <div>
+                        <h3 style="margin-bottom:0.5rem; font-family:'Syne'; font-size:1.4rem;">${service.title}</h3>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1.5rem;">Consola de Revisión y Redacción de Sermones</p>
+                        
+                        <div class="tabs-nav">
+                            <button class="tab-btn" id="btn-tab-bosquejo">Redactar Bosquejo</button>
+                            <button class="tab-btn active" id="btn-tab-escaleta">Horario</button>
+                            <button class="tab-btn" id="btn-tab-setlist">Setlist Músicos</button>
+                        </div>
+
+                        <div id="tab-content-escaleta" class="tab-content active">
+                            <table class="plan-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 25%;">Horario</th>
+                                        <th style="width: 50%;">Elemento de Orden</th>
+                                        <th style="text-align:right; width: 25%;">Duración</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="planContainerPastores"></tbody>
+                            </table>
+                        </div>
+
+                        <div id="tab-content-setlist" class="tab-content">
+                            <div class="setlist-header-row">
+                                <div class="col-title-zone">Canción / Título</div>
+                                <div class="col-pdf-zone">Cifrado</div>
+                                <div class="col-audio-zone">Audio</div>
+                            </div>
+                            <div id="songsContainerPastores"></div>
+                        </div>
+
+                        <div id="tab-content-bosquejo" class="tab-content">
+    <div style="display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start;">
+        
+        <div class="sketch-editor-container">
+            <p style="font-size:0.75rem; color:var(--text-labels); font-weight:600; text-transform:uppercase; margin-bottom: 0.5rem;">
+                Escribe y da formato a las notas del mensaje (Se sincronizará en tiempo real):
+            </p>
+            
+            <div style="display: flex; gap: 0.4rem; background: rgba(255,255,255,0.02); padding: 0.5rem; border-radius: 12px 12px 0 0; border: 1px solid rgba(255,255,255,0.05); border-bottom: none; flex-wrap: wrap;">
+                <button type="button" onclick="ejecutarComandoEditor('bold')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); color: #fff; padding: 0.3rem 0.6rem; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem;">B</button>
+                <button type="button" onclick="ejecutarComandoEditor('italic')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); color: #fff; padding: 0.3rem 0.6rem; border-radius: 6px; font-style: italic; cursor: pointer; font-size: 0.85rem;">I</button>
+                <button type="button" onclick="ejecutarComandoEditor('underline')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); color: #fff; padding: 0.3rem 0.6rem; border-radius: 6px; text-decoration: underline; cursor: pointer; font-size: 0.85rem;">U</button>
+                
+                <div style="width: 1px; background: rgba(255,255,255,0.1); margin: 0 0.25rem;"></div>
+                
+                <select onchange="ejecutarComandoEditor('fontSize', this.value); this.value='';" style="background: #12141d; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.3rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
+                    <option value="" disabled selected>Tamaño</option>
+                    <option value="2">Pequeño</option>
+                    <option value="3">Normal</option>
+                    <option value="4">Grande</option>
+                    <option value="5">Título</option>
+                </select>
+
+                <div style="width: 1px; background: rgba(255,255,255,0.1); margin: 0 0.25rem;"></div>
+
+                <button type="button" onclick="ejecutarComandoEditor('insertUnorderedList')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); color: #fff; padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">• Lista</button>
+            </div>
+
+            <div class="sketch-textarea" id="pastorSketchTextarea" contenteditable="true" style="height: calc(100vh - 390px); overflow-y: auto; background-color: rgba(10, 11, 16, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 0 0 16px 16px; padding: 1.5rem; color: var(--text-main); font-size: 0.95rem; line-height: 1.6; outline: none;" placeholder="Escribe aquí las notas del sermón..."></div>
+            
+            <button type="button" class="btn-save-sketch" id="btnPastorSaveSketch" style="margin-top: 1rem;">Publicar</button>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 16px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; width: 100%;">
+            <h4 style="font-family: 'Syne', sans-serif; font-size: 0.9rem; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem; font-weight: 700; letter-spacing: 0.02em;">📖 BUSCADOR BÍBLICO</h4>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <label style="display: block; font-size: 0.65rem; font-weight: 600; color: var(--text-labels); margin-bottom: 0.4rem; letter-spacing: 0.05em;">LIBRO</label>
+                <select id="bibleLibroSelect" style="width: 100%; padding: 0.6rem; font-size: 0.85rem; background: rgba(10, 11, 16, 0.5); border: 1px solid rgba(255,255,255,0.03); border-radius: 8px; color: #fff;">
+                    <option value="Genesis">Génesis</option><option value="Exodus">Éxodo</option><option value="Leviticus">Levítico</option><option value="Numbers">Números</option><option value="Deuteronomy">Deuteronomio</option><option value="Joshua">Josué</option><option value="Judges">Jueces</option><option value="Ruth">Rut</option><option value="1 Samuel">1 Samuel</option><option value="2 Samuel">2 Samuel</option><option value="1 Kings">1 Reyes</option><option value="2 Kings">2 Reyes</option><option value="1 Chronicles">1 Crónicas</option><option value="2 Chronicles">2 Crónicas</option><option value="Ezra">Esdras</option><option value="Nehemiah">Nehemías</option><option value="Esther">Ester</option><option value="Job">Job</option><option value="Psalms">Salmos</option><option value="Proverbs">Proverbios</option><option value="Ecclesiastes">Eclesiastés</option><option value="Song of Solomon">Cantares</option><option value="Isaiah">Isaías</option><option value="Jeremiah">Jeremías</option><option value="Lamentations">Lamentaciones</option><option value="Ezekiel">Ezequiel</option><option value="Daniel">Daniel</option><option value="Hosea">Oseas</option><option value="Joel">Joel</option><option value="Amos">Amós</option><option value="Obadiah">Abdías</option><option value="Jonah">Jonás</option><option value="Micah">Miqueas</option><option value="Nahum">Nahum</option><option value="Habakkuk">Habacuc</option><option value="Zephaniah">Sofonías</option><option value="Haggai">Hageo</option><option value="Zechariah">Zacarías</option><option value="Malachi">Malaquías</option><option value="Matthew">Mateo</option><option value="Mark">Marcos</option><option value="Luke">Lucas</option><option value="John">Juan</option><option value="Acts">Hechos</option><option value="Romans">Romanos</option><option value="1 Corinthians">1 Corintios</option><option value="2 Corinthians">2 Corintios</option><option value="Galatians">Gálatas</option><option value="Ephesians">Efesios</option><option value="Philippians">Filipenses</option><option value="Colossians">Colosenses</option><option value="1 Thessalonians">1 Tesalonicenses</option><option value="2 Thessalonians">2 Tesalonicenses</option><option value="1 Timothy">1 Timoteo</option><option value="2 Timothy">2 Timoteo</option><option value="Titus">Tito</option><option value="Philemon">Filemón</option><option value="Hebrews">Hebreos</option><option value="James">Santiago</option><option value="1 Peter">1 Pedro</option><option value="2 Peter">2 Pedro</option><option value="1 John">1 Juan</option><option value="2 John">2 Juan</option><option value="3 John">3 Juan</option><option value="Jude">Judas</option><option value="Revelation">Apocalipsis</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="display: block; font-size: 0.65rem; font-weight: 600; color: var(--text-labels); margin-bottom: 0.4rem; letter-spacing: 0.05em;">CITA (CAP:VER)</label>
+                    <input type="text" id="bibleCitaInput" placeholder="Ej: 3:16" style="width: 100%; padding: 0.6rem; font-size: 0.85rem; background: rgba(10, 11, 16, 0.5); border: 1px solid rgba(255,255,255,0.03); border-radius: 8px; color: #fff; outline: none;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="display: block; font-size: 0.65rem; font-weight: 600; color: var(--text-labels); margin-bottom: 0.4rem; letter-spacing: 0.05em;">VERSIÓN</label>
+                    <select id="bibleVersionSelect" style="width: 100%; padding: 0.6rem; font-size: 0.85rem; background: rgba(10, 11, 16, 0.5); border: 1px solid rgba(255,255,255,0.03); border-radius: 8px; color: #fff;">
+                        <option value="rvr1960">RVR1960</option>
+                        <option value="nvi">NVI</option>
+                        <option value="dhh">DHH</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="button" id="btnBuscarBiblia" style="width: 100%; padding: 0.65rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">🔍 Consultar Cita</button>
+
+            <div id="bibleResultPreview" style="font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 10px; min-height: 80px; max-height: 160px; overflow-y: auto; line-height: 1.4; display: flex; align-items: center; justify-content: center; text-align: center;">
+                El versículo consultado aparecerá aquí...
+            </div>
+
+            <button type="button" id="btnInsertarVersiculo" disabled style="width: 100%; padding: 0.7rem; background: rgba(212, 163, 89, 0.15); border: 1px solid rgba(212, 163, 89, 0.3); color: #f3d081; border-radius: 10px; font-size: 0.8rem; font-weight: 700; cursor: not-allowed; transition: all 0.2s;">➕ Insertar al Bosquejo</button>
+        </div>
+    </div>
+</div>
+
+<div class="team-section" style="max-height: calc(100vh - 180px); overflow-y: auto;">
+    <h4 style="font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; color: var(--text-main); margin-bottom: 0.5rem;">EQUIPO EN SERVICIO</h4>
+    <p style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Lineup de Servidores</p>
+    <div id="teamContainerPastores" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+</div>
+
+                    <div class="team-section" style="max-height: calc(100vh - 180px); overflow-y: auto;">
+                        <h4 style="font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; color: var(--text-main); margin-bottom: 0.5rem;">EQUIPO EN SERVICIO</h4>
+                        <p style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Lineup de Servidores</p>
+                        <div id="teamContainerPastores" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                    </div>
+                </div>
+            `;
+
+            // ==========================================================================
+            // LOGICA DE CARGA Y GUARDADO DEL EDITOR (Dentro del alcance de 'service')
+            // ==========================================================================
+            const txSketch = document.getElementById('pastorSketchTextarea');
+            const btnSave = document.getElementById('btnPastorSaveSketch');
+            
+            // Inyectamos el HTML enriquecido de Firestore usando innerHTML de forma segura
+            if (txSketch) {
+                txSketch.innerHTML = service.sketch || "";
+            }
+
+            if (btnSave) {
+                // Clonar botón para prevenir duplicidad de Event Listeners en actualizaciones de snapshot
+                const btnClonado = btnSave.cloneNode(true);
+                btnSave.parentNode.replaceChild(btnClonado, btnSave);
+
+                btnClonado.addEventListener('click', async () => {
+                    if(!selectedServiceId) return;
+                    btnClonado.disabled = true;
+                    btnClonado.innerText = "Sincronizando...";
+                    try {
+                        const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js");
+                        await updateDoc(doc(db, "services", selectedServiceId), {
+                            sketch: txSketch.innerHTML // Guardamos la estructura HTML nativa enriquecida
+                        });
+                        mostrarToast("¡Bosquejo pastoral publicado y guardado con éxito! ☁️");
+                    } catch (err) {
+                        console.error("Error al guardar bosquejo:", err);
+                        mostrarToast("No se pudo guardar el bosquejo", "delete");
+                    } finally {
+                        btnClonado.disabled = false;
+                        btnClonado.innerText = "Sincronizar Bosquejo en la Nube";
+                    }
+                });
+            }
+
+            // 1. Cargar Escaleta (Horario)
+            const planContainer = document.getElementById('planContainerPastores');
+            const plan = service.plan || [];
+            if(plan.length === 0) {
+                planContainer.innerHTML = `<tr><td colspan="3" style="color:var(--text-muted); text-align:center; padding:2rem;">No hay bloques cronometrados aún.</td></tr>`;
+            } else {
+                let [horas, minutos] = (service.time || "18:00").split(":").map(Number);
+                let servicioBaseRef = new Date();
+                servicioBaseRef.setHours(horas, minutos, 0, 0);
+
+                plan.forEach((item) => {
+                    let duracionMinutos = Number(item.duration || 0);
+                    let horaInicioPaso = new Date(servicioBaseRef.getTime());
+                    servicioBaseRef.setMinutes(servicioBaseRef.getMinutes() + duracionMinutos);
+                    let horaFinPaso = new Date(servicioBaseRef.getTime());
+
+                    let stringInicio = horaInicioPaso.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    let stringFin = horaFinPaso.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+                    let ahora = new Date();
+                    let claseFila = "";
+                    let etiquetaEstado = "";
+
+                    if (ahora >= horaInicioPaso && ahora < horaFinPaso) {
+                        claseFila = "live-now";
+                        etiquetaEstado = `<span class="live-badge">EN VIVO</span>`;
+                    } else if (ahora >= horaFinPaso) {
+                        claseFila = "past-item";
+                    }
+
+                    planContainer.insertAdjacentHTML('beforeend', `
+                        <tr class="plan-row ${claseFila}">
+                            <td class="time-range-display">${stringInicio} - ${stringFin}</td>
+                            <td>
+                                <strong>${item.title}</strong>
+                                ${etiquetaEstado ? '<div style="margin-top:0.25rem;">' + etiquetaEstado + '</div>' : ''}
+                            </td>
+                            <td style="text-align:right;" class="plan-duration">${duracionMinutos} min</td>
+                        </tr>
+                    `);
+                });
+            }
+
+            // 2. Cargar Setlist de Canciones
+            const songsContainer = document.getElementById('songsContainerPastores');
+            const setlist = service.setlist || [];
+            if(setlist.length === 0) {
+                songsContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:2.5rem 1rem;">No hay canciones asignadas.</p>`;
+            } else {
+                setlist.forEach((song, idx) => {
+                    let btnPdf = song.pdf ? `<button onclick="abrirVisorPdfInterno('${song.pdf}', '${song.title}')" class="btn-mini-resource">Acordes.pdf</button>` : `<span style="color:rgba(255,255,255,0.03);">—</span>`;
+                    let audioTrigger = song.audio ? `<audio id="audio-track-${idx}" controls src="${song.audio}"></audio>` : `<span style="color:rgba(255,255,255,0.03);">—</span>`;
+
+                    songsContainer.insertAdjacentHTML('beforeend', `
+                        <div class="song-track-item">
+                            <div class="col-title-zone">
+                                <span class="song-track-key">${song.key}</span>
+                                <span class="song-track-title">${song.title}</span>
+                            </div>
+                            <div class="col-pdf-zone">${btnPdf}</div>
+                            <div class="col-audio-zone">${audioTrigger}</div>
+                        </div>
+                    `);
+                });
+            }
+
+            // 4. Cargar Lineup de Servidores de forma jerárquica
+            const teamContainer = document.getElementById('teamContainerPastores');
+            const rolesGuardados = service.roles || {};
+            const entradasRoles = Object.entries(rolesGuardados);
+
+            if (entradasRoles.length === 0) {
+                teamContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.8rem; text-align:center; padding:1rem;">Ningún servidor asignado.</p>`;
+            } else {
+                teamContainer.innerHTML = "";
+                const procesarEquipoPastores = async () => {
+                    const gruposAreas = {};
+                    
+                    for (const [puestoKey, asignadoValue] of entradasRoles) {
+                        let nombreVoluntario = asignadoValue;
+                        let funcionEspecifica = puestoKey;
+
+                        if (asignadoValue && asignadoValue.includes('__')) {
+                            const partes = asignadoValue.split('__');
+                            nombreVoluntario = partes[0];
+                            funcionEspecifica = partes[1];
+                        }
+
+                        if (nombreVoluntario && nombreVoluntario !== 'Sin asignar') {
+                            let areaDelVoluntario = "Otros";
+                            let esEncargado = false;
+                            let fotoPerfilUrl = "";
+
+                            try {
+                                const q = query(collection(db, "people"), where("fullName", "==", nombreVoluntario));
+                                const querySnapshot = await getDocs(q);
+                                if (!querySnapshot.empty) {
+                                    querySnapshot.forEach((docSnap) => {
+                                        const d = docSnap.data();
+                                        areaDelVoluntario = d.serviceArea || "Miembro";
+                                        esEncargado = d.isAreaLeader === true;
+                                        fotoPerfilUrl = d.avatar || "";
+                                    });
+                                }
+                            } catch (err) { console.error(err); }
+
+                            if (!gruposAreas[areaDelVoluntario]) gruposAreas[areaDelVoluntario] = [];
+                            gruposAreas[areaDelVoluntario].push({
+                                nombre: nombreVoluntario,
+                                funcion: funcionEspecifica,
+                                lider: esEncargado,
+                                foto: fotoPerfilUrl
+                            });
+                        }
+                    }
+
+                    const ordenAreas = ["Pastor", "Alabanza", "Multimedia", "Audio", "Logística", "Tv", "Niños"];
+                    
+                    ordenAreas.forEach(area => {
+                        if (gruposAreas[area] && gruposAreas[area].length > 0) {
+                            teamContainer.insertAdjacentHTML('beforeend', `
+                                <div style="margin-top: 1rem; padding-left: 0.25rem; border-left: 2px solid rgba(255,255,255,0.15); font-family:'Syne'; font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase;">${area}</div>
+                            `);
+
+                            gruposAreas[area].sort((a,b) => (a.lider ? -1 : 1) || a.nombre.localeCompare(b.nombre));
+
+                            gruposAreas[area].forEach(servidor => {
+                                let cardStyle = "background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03);";
+                                let badgeStyle = "color: var(--text-labels); background: rgba(255, 255, 255, 0.04);";
+                                
+                                if (servidor.lider) {
+                                    cardStyle = "background: rgba(212, 163, 89, 0.04) !important; border: 1px solid rgba(212, 163, 89, 0.25) !important;";
+                                    badgeStyle = "color: #08090d !important; background: linear-gradient(135deg, #f3d081 0%, #d4a359 100%) !important; font-weight:700;";
+                                }
+
+                                const avatar = servidor.foto ? servidor.foto : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238e95a5'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5-3.33-8-3.33z'/></svg>";
+
+                                teamContainer.insertAdjacentHTML('beforeend', `
+                                    <div class="people-row" style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.8rem; border-radius: 10px; ${cardStyle}">
+                                        <div style="display: flex; align-items: center; gap: 0.65rem; min-width: 0; flex: 1;">
+                                            <img src="${avatar}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                                            <span class="person-name" style="font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${servidor.nombre}</span>
+                                        </div>
+                                        <span class="person-role" style="font-size: 0.7rem; padding: 0.3rem 0.6rem; border-radius: 6px; ${badgeStyle}">${servidor.funcion}</span>
+                                    </div>
+                                `);
+                            });
+                        }
+                    });
+                };
+                procesarEquipoPastores();
+            }
+
+            // Activar intercambiador de pestañas de la Suite
+            const tabs = ['escaleta', 'setlist', 'bosquejo'];
+            tabs.forEach(tab => {
+                document.getElementById(`btn-tab-${tab}`).addEventListener('click', () => {
+                    tabs.forEach(t => {
+                        document.getElementById(`btn-tab-${t}`).classList.remove('active');
+                        document.getElementById(`tab-content-${t}`).classList.remove('active');
+                    });
+                    document.getElementById(`btn-tab-${tab}`).classList.add('active');
+                    document.getElementById(`tab-content-${tab}`).classList.add('active');
+                });
+            });
+        }
+
+        // PDFs y Cierre de Sesión
+        window.abrirVisorPdfInterno = function(url, titulo) {
+            document.getElementById('pdfModalTitle').innerText = titulo.toUpperCase();
+            document.getElementById('pdfInternalFrame').src = url;
+            document.getElementById('pdfModalInternal').style.opacity = "1";
+            document.getElementById('pdfModalInternal').style.pointerEvents = "auto";
+        };
+
+        window.cerrarVisorPdfInterno = function() {
+            document.getElementById('pdfModalInternal').style.opacity = "0";
+            document.getElementById('pdfModalInternal').style.pointerEvents = "none";
+            document.getElementById('pdfInternalFrame').src = "";
+        };
+
+        document.getElementById('btnLogout').addEventListener('click', () => signOut(auth));
+
+
+
+
+      // ==========================================================================
+// 📖 MOTOR BÍBLICO E INSERCIÓN DINÁMICA DE VERSÍCULOS (APIS COMPLETA)
+// ==========================================================================
+let HTMLVersiculoCargado = ""; // Almacén temporal del fragmento formateado
+let ultimaSeleccionCursor = null; // Almacena la posición exacta del cursor
+
+// Guardar la posición del cursor cada vez que el pastor hace clic o escribe en su blog
+document.addEventListener('selectionchange', () => {
+    const selector = window.getSelection();
+    const cajaTexto = document.getElementById('pastorSketchTextarea');
+    
+    if (selector.rangeCount > 0 && cajaTexto && cajaTexto.contains(selector.anchorNode)) {
+        ultimaSeleccionCursor = selector.getRangeAt(0).cloneRange();
+    }
+});
+
+// Escuchador global para delegar los clics de la Biblia de forma segura
+document.addEventListener('click', async (e) => {
+    
+    // 🔍 ACCIÓN: CLICK EN "CONSULTAR CITA"
+    if (e.target && e.target.id === 'btnBuscarBiblia') {
+        const libro = document.getElementById('bibleLibroSelect').value;
+        const cita = document.getElementById('bibleCitaInput').value.trim();
+        const version = document.getElementById('bibleVersionSelect').value;
+        const btnBuscar = document.getElementById('btnBuscarBiblia');
+        const preview = document.getElementById('bibleResultPreview');
+        const btnInsertar = document.getElementById('btnInsertarVersiculo');
+
+        if(!cita || !cita.includes(':')) {
+            preview.innerText = "⚠️ Escribe la cita correctamente usando dos puntos (Ej: 3:16).";
+            preview.style.color = "var(--error)";
+            return;
+        }
+
+        btnBuscar.disabled = true;
+        btnBuscar.innerText = "Buscando en las Escrituras...";
+        preview.style.color = "var(--text-muted)";
+        preview.innerText = "Consultando base de datos bíblica...";
+
+        try {
+            const [capitulo, rangoVersiculos] = cita.split(':');
+            
+            // Mapeo exacto de las siglas requeridas por la API de Bolls Life
+            let bollsVersion = "RVR1960";
+            if (version === "nvi") bollsVersion = "NVI";
+            if (version === "dhh") bollsVersion = "DHH";
+
+            // Buscamos el número identificador del libro en base al selector
+            const mapeoLibrosBolls = {
+                "Genesis":1,"Exodus":2,"Leviticus":3,"Numbers":4,"Deuteronomy":5,"Joshua":6,"Judges":7,"Ruth":8,"1 Samuel":9,"2 Samuel":10,"1 Kings":11,"2 Kings":12,"1 Chronicles":13,"2 Chronicles":14,"Ezra":15,"Nehemiah":16,"Esther":17,"Job":18,"Psalms":19,"Proverbs":20,"Ecclesiastes":21,"Song of Solomon":22,"Isaiah":23,"Jeremiah":24,"Lamentations":25,"Ezekiel":26,"Daniel":27,"Hosea":28,"Joel":29,"Amos":30,"Obadiah":31,"Jonah":32,"Micah":33,"Nahum":34,"Habakkuk":35,"Zephaniah":36,"Haggai":37,"Zechariah":38,"Malachi":39,"Matthew":40,"Mark":41,"Luke":42,"John":43,"Acts":44,"Romans":45,"1 Corinthians":46,"2 Corinthians":47,"Galatians":48,"Ephesians":49,"Philippians":50,"Colossians":51,"1 Thessalonians":52,"2 Thessalonians":53,"1 Timothy":54,"2 Timothy":55,"Titus":56,"Philemon":57,"Hebrews":58,"James":59,"1 Peter":60,"2 Peter":61,"1 John":62,"2 John":63,"3 John":64,"Jude":65,"Revelation":66
+            };
+
+            const libroId = mapeoLibrosBolls[libro];
+
+            // Endpoint público transaccional de Bolls Life (Soporta CORS nativo perfecto)
+            const respuesta = await fetch(`https://bolls.life/api/v2/bible/verse/${bollsVersion}/${libroId}/${capitulo}/${rangoVersiculos}/`);
+            
+            if (!respuesta.ok) throw new Error();
+            
+            const datosVersiculos = await respuesta.json();
+
+            // La API puede devolver un solo versículo o un array si es un rango (Ej: 16-17)
+            if (datosVersiculos && datosVersiculos.length > 0) {
+                
+                // Unificamos el texto si el Pastor buscó múltiples versículos juntos
+                let textoCompletoBiblia = datosVersiculos.map(v => v.text).join(" ");
+                // Limpiamos etiquetas raras de formato que a veces traen los textos antiguos
+                textoCompletoBiblia = textoCompletoBiblia.replace(/<\/?[^>]+(>|$)/g, "").trim();
+
+                // Formateamos el nombre del libro visible en español para la cita
+                const selectorTexto = document.getElementById('bibleLibroSelect');
+                const nombreLibroEspanol = selectorTexto.options[selectorTexto.selectedIndex].text;
+                const referenciaFormateada = `${nombreLibroEspanol} ${capitulo}:${rangoVersiculos} (${bollsVersion})`;
+
+                // Guardamos el fragmento con diseño premium dorado para inyectar en el blog
+                HTMLVersiculoCargado = `<br><blockquote style="border-left: 3px solid #d4a359; padding-left: 1rem; margin: 0.75rem 0; color: #e2e8f0; font-style: italic;"><b>${referenciaFormateada}:</b> "${textoCompletoBiblia}"</blockquote><br>`;
+                
+                preview.style.textAlign = "left";
+                preview.innerHTML = `<b>${referenciaFormateada}:</b> "${textoCompletoBiblia}"`;
+                
+                // Desbloqueamos el botón de inserción
+                btnInsertar.disabled = false;
+                btnInsertar.style.background = "linear-gradient(135deg, #f3d081 0%, #d4a359 100%)";
+                btnInsertar.style.color = "#08090d";
+                btnInsertar.style.cursor = "pointer";
+            } else {
+                throw new Error();
+            }
+        } catch (err) {
+            preview.innerText = "❌ No se encontró la cita. Verifica que el libro tenga ese capítulo o número de versículo.";
+            preview.style.color = "var(--error)";
+            btnInsertar.disabled = true;
+            btnInsertar.style.background = "rgba(212, 163, 89, 0.2)";
+            btnInsertar.style.color = "#f3d081";
+            btnInsertar.style.cursor = "not-allowed";
+        } finally {
+            btnBuscar.disabled = false;
+            btnBuscar.innerText = "🔍 Consultar Cita";
+        }
+    }
+
+    // ➕ ACCIÓN: CLICK EN "INSERTAR AL BOSQUEJO"
+    if (e.target && e.target.id === 'btnInsertarVersiculo') {
+        const cajaTexto = document.getElementById('pastorSketchTextarea');
+        if (!cajaTexto || !HTMLVersiculoCargado) return;
+
+        cajaTexto.focus();
+        const selector = window.getSelection();
+
+        if (ultimaSeleccionCursor) {
+            selector.removeAllRanges();
+            selector.addRange(ultimaSeleccionCursor);
+        }
+
+        const fragmentoHTML = selector.getRangeAt(0).createContextualFragment(HTMLVersiculoCargado);
+        selector.getRangeAt(0).insertNode(fragmentoHTML);
+        selector.collapseToEnd();
+
+        document.getElementById('bibleCitaInput').value = "";
+        document.getElementById('bibleResultPreview').innerHTML = "¡Versículo insertado con éxito! Puedes buscar otro.";
+        document.getElementById('bibleResultPreview').style.textAlign = "center";
+        
+        const btnInsertar = document.getElementById('btnInsertarVersiculo');
+        btnInsertar.disabled = true;
+        btnInsertar.style.background = "rgba(212, 163, 89, 0.2)";
+        btnInsertar.style.color = "#f3d081";
+        btnInsertar.style.cursor = "not-allowed";
+        
+        HTMLVersiculoCargado = "";
+        cajaTexto.dispatchEvent(new Event('input'));
+    }
+});
+
+    </script>
+</body>
+</html>
