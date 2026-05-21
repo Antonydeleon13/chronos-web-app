@@ -669,62 +669,64 @@ document.addEventListener('click', async (e) => {
         try {
             const [capitulo, rangoVersiculos] = cita.split(':');
             
-            // 🔄 Pasamos las siglas al formato exacto de la API internacional
-            let versionApi = version.toUpperCase(); // RVR1960, NVI, DHH
+            // Normalizamos la versión para la API de Deno (rv1960, nvi, dhh)
+            let versionApi = version === 'rvr1960' ? 'rv1960' : version.toLowerCase();
 
-            // 🚀 ENDPOINT DE ALTO RENDIMIENTO INMUNE A CORS PARA GITHUB PAGES
-            // Consumimos directo de la base de datos abierta de bolls.life pero usando un puente HTTPS nativo sin redirecciones 302
-            const urlFinal = `https://bolls.life/api/v2/bible/verse/${versionApi}/${libro === 'Psalms' ? 19 : libro === 'Genesis' ? 1 : libro === 'Numbers' ? 4 : 1}/${capitulo}/${rangoVersiculos}/`;
-            
-            // Si prefieres mantener bible-api de forma directa sin usar AllOrigins, usamos el endpoint alternativo con CORS abierto de Deno Deploy:
-            let denoVersion = version === 'rvr1960' ? 'rv1960' : version;
-            const urlDeno = `https://bible-api.deno.dev/api/read/${denoVersion}/${libro.toLowerCase()}/${capitulo}/${rangoVersiculos}`;
+            // Endpoint directo a la API de Deno que probamos con éxito en tu consola
+            const urlFinal = `https://bible-api.deno.dev/api/read/${versionApi}/${libro.toLowerCase()}/${capitulo}/${rangoVersiculos}`;
 
-            // Realizamos el fetch directo a Deno Deploy (CORS Abierto nativo, no usa proxies)
-            const respuesta = await fetch(urlDeno);
-            
-            if (!respuesta.ok) throw new Error("Servidor bíblico fuera de línea.");
+            const respuesta = await fetch(urlFinal);
+            if (!respuesta.ok) throw new Error("Error en la respuesta del servidor bíblico.");
             
             const datos = await respuesta.json();
 
-            // Procesamos la estructura de respuesta de la API de Deno
-            if (datos && datos.vers) {
-                let textoCompletoBiblia = "";
-                
-                // Si el pastor buscó un rango, Deno devuelve un Array, si es un solo versículo devuelve un objeto
-                if (Array.isArray(datos.vers)) {
-                    textoCompletoBiblia = datos.vers.map(v => v.text).join(" ");
-                } else if (datos.vers.text) {
-                    textoCompletoBiblia = datos.vers.text;
-                } else {
-                    textoCompletoBiblia = datos.vers;
+            let textoCompletoBiblia = "";
+            
+            // 🔍 EXTRACTOR ADAPTADO A TU CONSOLA REAL:
+            if (datos) {
+                if (datos.verse) {
+                    textoCompletoBiblia = datos.verse; // Caso exitoso de tu consola (un solo versículo)
+                } else if (datos.vers) {
+                    // Si es un rango (ej: 1-3), Deno suele mandar un Array en 'vers'
+                    if (Array.isArray(datos.vers)) {
+                        textoCompletoBiblia = datos.vers.map(v => v.text).join(" ");
+                    } else {
+                        textoCompletoBiblia = datos.vers.text || datos.vers;
+                    }
+                } else if (datos.text) {
+                    textoCompletoBiblia = datos.text;
                 }
-
-                // Limpiamos espacios y saltos de línea molestos
-                textoCompletoBiblia = textoCompletoBiblia.replace(/\s+/g, ' ').trim();
-
-                // Formateamos el nombre del libro visible en español para la cita basándonos en tu select del DOM
-                const selectorTexto = document.getElementById('bibleLibroSelect');
-                const nombreLibroEspanol = selectorTexto.options[selectorTexto.selectedIndex].text;
-                const referenciaFormateada = `${nombreLibroEspanol} ${capitulo}:${rangoVersiculos} (${version.toUpperCase()})`;
-
-                // Guardamos el fragmento con diseño premium dorado para inyectar en el blog
-                HTMLVersiculoCargado = `<br><blockquote style="border-left: 3px solid #d4a359; padding-left: 1rem; margin: 0.75rem 0; color: #e2e8f0; font-style: italic;"><b>${referenciaFormateada}:</b> "${textoCompletoBiblia}"</blockquote><br>`;
-                
-                preview.style.textAlign = "left";
-                preview.innerHTML = `<b>${referenciaFormateada}:</b> "${textoCompletoBiblia}"`;
-                
-                // Desbloqueamos el botón de inserción
-                btnInsertar.disabled = false;
-                btnInsertar.style.background = "linear-gradient(135deg, #f3d081 0%, #d4a359 100%)";
-                btnInsertar.style.color = "#08090d";
-                btnInsertar.style.cursor = "pointer";
-            } else {
-                throw new Error();
             }
+
+            // Si no se pudo mapear texto válido, lanzamos el error
+            if (!textoCompletoBiblia || typeof textoCompletoBiblia !== 'string') {
+                throw new Error("Formato de respuesta no reconocido.");
+            }
+
+            // Limpiamos los espacios y saltos de línea molestos
+            textoCompletoBiblia = textoCompletoBiblia.replace(/\s+/g, ' ').trim();
+
+            // Formateamos la cita en español para la previsualización del Pastor
+            const selectorTexto = document.getElementById('bibleLibroSelect');
+            const nombreLibroEspanol = selectorTexto.options[selectorTexto.selectedIndex].text;
+            const referenciaFormateada = `${nombreLibroEspanol} ${capitulo}:${rangoVersiculos} (${version.toUpperCase()})`;
+
+            // Guardamos el fragmento con diseño premium dorado para inyectar en el blog
+            HTMLVersiculoCargado = `<br><blockquote style="border-left: 3px solid #d4a359; padding-left: 1rem; margin: 0.75rem 0; color: #e2e8f0; font-style: italic;"><b>${referenciaFormateada}:</b> "${textoCompletoBiblia}"</blockquote><br>`;
+            
+            preview.style.textAlign = "left";
+            preview.innerHTML = `<b>${referenciaFormateada}:</b> "${textoCompletoBiblia}"`;
+            
+            // Desbloqueamos el botón dorado de inserción
+            btnInsertar.disabled = false;
+            btnInsertar.style.background = "linear-gradient(135deg, #f3d081 0%, #d4a359 100%)";
+            btnInsertar.style.color = "#08090d";
+            btnInsertar.style.cursor = "pointer";
+
         } catch (err) {
             console.error("Fallo definitivo en la consulta:", err);
-            preview.innerText = "❌ No se encontró la cita. Verifica que el libro tenga ese capítulo o número de versículo.";
+            
+            preview.innerText = "❌ No se encontró la cita o la estructura cambió. Verifica los números tecleados (Ej: 1:1 o 3:16).";
             preview.style.color = "var(--error)";
             preview.style.textAlign = "center";
             
