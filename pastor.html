@@ -669,28 +669,39 @@ document.addEventListener('click', async (e) => {
         try {
             const [capitulo, rangoVersiculos] = cita.split(':');
             
-            // Traducimos tu variable interna al idioma que exige esta API
-            let translationParam = version === 'rvr1960' ? 'rvr1960' : version;
-            
-            // 1. Construimos la URL original que apunta a la Biblia
-            const urlOriginalBiblia = `https://bible-api.com/${libro}+${capitulo}:${rangoVersiculos}?translation=${translationParam}`;
+            // 🔄 Pasamos las siglas al formato exacto de la API internacional
+            let versionApi = version.toUpperCase(); // RVR1960, NVI, DHH
 
-            // 🚀 2. Envolvemos la URL original en el Proxy de AllOrigins para saltarnos el CORS de GitHub Pages
-            const urlConProxyCORS = `https://api.allorigins.win/get?url=${encodeURIComponent(urlOriginalBiblia)}`;
-
-            // Realizamos la petición al Proxy (este servidor intermedio siempre tiene el acceso abierto)
-            const respuesta = await fetch(urlConProxyCORS);
-            if (!respuesta.ok) throw new Error();
+            // 🚀 ENDPOINT DE ALTO RENDIMIENTO INMUNE A CORS PARA GITHUB PAGES
+            // Consumimos directo de la base de datos abierta de bolls.life pero usando un puente HTTPS nativo sin redirecciones 302
+            const urlFinal = `https://bolls.life/api/v2/bible/verse/${versionApi}/${libro === 'Psalms' ? 19 : libro === 'Genesis' ? 1 : libro === 'Numbers' ? 4 : 1}/${capitulo}/${rangoVersiculos}/`;
             
-            const contenedorProxy = await respuesta.json();
-            
-            // Extraemos y parseamos el string de datos JSON real que viene dentro de la propiedad '.contents'
-            const datos = JSON.parse(contenedorProxy.contents);
+            // Si prefieres mantener bible-api de forma directa sin usar AllOrigins, usamos el endpoint alternativo con CORS abierto de Deno Deploy:
+            let denoVersion = version === 'rvr1960' ? 'rv1960' : version;
+            const urlDeno = `https://bible-api.deno.dev/api/read/${denoVersion}/${libro.toLowerCase()}/${capitulo}/${rangoVersiculos}`;
 
-            // 3. Procesamos la respuesta de bible-api de forma idéntica a tu lógica original
-            if (datos && datos.text) {
-                // Limpiamos los saltos de línea pesados que a veces trae el formato de texto antiguo
-                let textoCompletoBiblia = datos.text.replace(/\s+/g, ' ').trim();
+            // Realizamos el fetch directo a Deno Deploy (CORS Abierto nativo, no usa proxies)
+            const respuesta = await fetch(urlDeno);
+            
+            if (!respuesta.ok) throw new Error("Servidor bíblico fuera de línea.");
+            
+            const datos = await respuesta.json();
+
+            // Procesamos la estructura de respuesta de la API de Deno
+            if (datos && datos.vers) {
+                let textoCompletoBiblia = "";
+                
+                // Si el pastor buscó un rango, Deno devuelve un Array, si es un solo versículo devuelve un objeto
+                if (Array.isArray(datos.vers)) {
+                    textoCompletoBiblia = datos.vers.map(v => v.text).join(" ");
+                } else if (datos.vers.text) {
+                    textoCompletoBiblia = datos.vers.text;
+                } else {
+                    textoCompletoBiblia = datos.vers;
+                }
+
+                // Limpiamos espacios y saltos de línea molestos
+                textoCompletoBiblia = textoCompletoBiblia.replace(/\s+/g, ' ').trim();
 
                 // Formateamos el nombre del libro visible en español para la cita basándonos en tu select del DOM
                 const selectorTexto = document.getElementById('bibleLibroSelect');
@@ -712,9 +723,11 @@ document.addEventListener('click', async (e) => {
                 throw new Error();
             }
         } catch (err) {
-            console.error("Fallo en la consulta con Proxy:", err);
-            preview.innerText = "❌ No se encontró la cita o el servidor proxy está saturado. Verifica que el libro tenga ese capítulo o número.";
+            console.error("Fallo definitivo en la consulta:", err);
+            preview.innerText = "❌ No se encontró la cita. Verifica que el libro tenga ese capítulo o número de versículo.";
             preview.style.color = "var(--error)";
+            preview.style.textAlign = "center";
+            
             btnInsertar.disabled = true;
             btnInsertar.style.background = "rgba(212, 163, 89, 0.2)";
             btnInsertar.style.color = "#f3d081";
