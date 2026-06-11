@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+    <meta charset="UTF-8">
+   <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://www.paypal.com; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://www.paypal.com; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com https://www.paypal.com; img-src 'self' data: https://www.paypalobjects.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Chronos — Church Operations Suite</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://www.paypal.com/sdk/js?client-id=BAAqgTi9dF1EMr-cdXEcxhvmkJFraGdm6l7jT0s0Dd1br_M2EjqM5NRWWGjwNRsuTrWP8w-DH9flpgvd1s&vault=true&intent=subscription&locale=es_GT"></script>
+
+    
+    <style>
+        :root {
+            --bg-color: #050508; 
+            --text-main: #ffffff;
+            --text-muted: #6b7280;
+            --text-labels: #9ca3af;
+            --accent: #ffffff; 
+            --accent-gradient: linear-gradient(135deg, #ffffff 0%, #a3a3a3 100%);
+            --error: #f87171;
+            --success: #34d399;
+            --audio-gold: #d4a359;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
+            letter-spacing: -0.01em;
+        }
+
+        body::before {
+            content: ''; position: absolute; width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, rgba(0,0,0,0) 70%);
+            top: -10%; right: -10%; z-index: 0; pointer-events: none;
+        }
+
+        body::after {
+            content: ''; position: absolute; width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.02) 0%, rgba(0,0,0,0) 60%);
+            bottom: -10%; left: -10%; z-index: 0; pointer-events: none;
+        }
+
+        .login-container {
+            width: 100%; max-width: 420px; margin: auto; position: relative; z-index: 1;
+            animation: elegantFade 1s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .brand { text-align: center; margin-bottom: 2.5rem; }
+        .brand h1 {
+            font-family: 'Syne', sans-serif; font-size: 2.3rem; font-weight: 800; letter-spacing: -0.10em;
+            background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem;
+        }
+        .brand p { color: var(--text-muted); font-size: 0.688rem; text-transform: uppercase; letter-spacing: 0.4em; font-weight: 500; }
+
+        .login-form-wrapper {
+            background-color: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 24px; padding: 2.5rem 2rem; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        }
+
+        .form-group { margin-bottom: 1.5rem; position: relative; }
+        .form-group label { display: block; font-size: 0.688rem; font-weight: 600; color: var(--text-labels); margin-bottom: 0.5rem; letter-spacing: 0.15em; }
+
+        .form-group input {
+            width: 100%; padding: 0.75rem 0; background-color: transparent; border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-main); font-family: inherit; font-size: 1rem; transition: all 0.3s ease; border-radius: 0;
+        }
+        .form-group input:focus { outline: none; border-bottom-color: rgba(255, 255, 255, 0.8); }
+
+        /* Contenedor de Password con Visor SVG */
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .password-wrapper input {
+            padding-right: 2.5rem;
+        }
+        .toggle-password-btn {
+            position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+            background: transparent; border: none; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; width: 32px; height: 32px;
+            color: var(--text-muted); transition: color 0.2s; padding: 0;
+        }
+        .toggle-password-btn:hover { color: var(--text-main); }
+        .toggle-password-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+        .error-message {
+            color: var(--error); font-size: 0.813rem; margin-bottom: 1.5rem; display: none;
+            text-align: left; font-weight: 400; border-left: 2px solid var(--error); padding-left: 0.75rem;
+        }
+
+        .btn-submit {
+            width: 100%; padding: 1rem; background-color: var(--text-main); color: var(--bg-color);
+            border: none; border-radius: 12px; font-size: 0.875rem; font-weight: 600; letter-spacing: 0.05em; cursor: pointer; transition: all 0.3s ease; margin-top: 0.5rem;
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.05); -webkit-tap-highlight-color: transparent;
+        }
+        .btn-submit:hover { background-color: #e5e5e5; transform: translateY(-1px); box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1); }
+        .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+        .toggle-form-container {
+            text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted);
+        }
+        .toggle-form-link {
+            color: var(--text-main); font-weight: 600; text-decoration: none; cursor: pointer; margin-left: 0.25rem;
+        }
+        .toggle-form-link:hover { text-decoration: underline; }
+
+        .form-block { display: none; }
+        .form-block.active { display: block; animation: quickFade 0.4s ease; }
+
+        /* --- CALCULADORA MODULAR --- */
+        .modular-pricing-container {
+            display: flex; flex-direction: column; gap: 1rem; text-align: left; margin-bottom: 1rem;
+        }
+        .module-card {
+            background: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 16px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; transition: all 0.3s ease;
+        }
+        .module-card.active { background: rgba(255, 255, 255, 0.02); border-color: rgba(255, 255, 255, 0.12); }
+        .module-row { display: flex; justify-content: space-between; align-items: center; }
+        .module-info h4 { font-size: 0.9rem; font-weight: 600; color: #ffffff; }
+        .module-info p { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; }
+
+        .switch-premium { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+        .switch-premium input { opacity: 0; width: 0; height: 0; }
+        .slider-premium {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: .3s; border-radius: 24px;
+        }
+        .slider-premium:before {
+            position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
+            background-color: #8e95a5; transition: .3s; border-radius: 50%;
+        }
+        input:checked + .slider-premium { background-color: #ffffff; border-color: #ffffff; }
+        input:checked + .slider-premium:before { transform: translateX(20px); background-color: #050508; }
+
+        .capacity-select-zone {
+            display: none; border-top: 1px dashed rgba(255, 255, 255, 0.05); padding-top: 0.75rem; margin-top: 0.25rem;
+            animation: slideDownFino 0.3s ease forwards;
+        }
+        .capacity-select-zone.visible { display: block; }
+        .select-premium {
+            width: 100%; padding: 0.6rem; background: #0d0e12; border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px; color: #ffffff; font-size: 0.8rem; outline: none; cursor: pointer;
+        }
+
+        .sticky-price-bar {
+            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 390px; background: rgba(18, 20, 29, 0.85);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08); padding: 1rem 1.5rem; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6); display: flex; justify-content: space-between; align-items: center;
+            z-index: 2000; opacity: 0; pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .sticky-price-bar.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="brand">
+            <h1>CHRONOS</h1>
+            <p>Church Operations Suite</p>
+        </div>
+
+        <div class="login-form-wrapper">
+            <div id="errorMessage" class="error-message"></div>
+
+            <div id="loginBlock" class="form-block active">
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">CORREO ELECTRÓNICO</label>
+                        <input type="email" id="email" required placeholder="nombre@iglesia.com" autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">CONTRASEÑA</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password">
+                            <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('password', this)" title="Mostrar contraseña">
+                                <svg viewBox="0 0 24 24" id="svg-close"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit">Acceder al Panel</button>
+                </form>
+                <div class="toggle-form-container">
+                    ¿No tienes una cuenta? <span class="toggle-form-link" onclick="switchForm('tierBlock')">Registrar Iglesia</span>
+                </div>
+            </div>
+
+            <div id="tierBlock" class="form-block">
+                <div class="modular-pricing-container">
+                    <p style="font-size: 0.65rem; color: var(--text-labels); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.25rem;">Configura las Herramientas de tu Entorno</p>
+
+                    <div class="module-card" id="card-services">
+                        <div class="module-row">
+                            <div class="module-info">
+                                <h4>Protocolo & Flujo del Servicio</h4>
+                                <p>Control de tiempos del altar en vivo y ruteo de equipos.</p>
+                            </div>
+                            <label class="switch-premium">
+                                <input type="checkbox" id="toggle-services" onchange="calcularPrecioModular()">
+                                <span class="slider-premium"></span>
+                            </label>
+                        </div>
+                        <div class="capacity-select-zone" id="select-zone-services">
+                            <select id="size-services" class="select-premium" onchange="calcularPrecioModular()">
+                                <option value="15" data-limit="25" data-plan-id="P-8EP96166EV773243TNIMRZOQ">Infraestructura Básica (Hasta 25 servidores) — $15/mes</option>
+                                <option value="35" data-limit="100" data-plan-id="P-CAMBIA_ESTO_35">Infraestructura Media (Hasta 100 servidores) — $35/mes</option>
+                                <option value="69" data-limit="9999" data-plan-id="P-CAMBIA_ESTO_69">Infraestructura Ilimitada — $69/mes</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="module-card" id="card-music">
+                        <div class="module-row">
+                            <div class="module-info">
+                                <h4>Biblioteca Musical Extendida</h4>
+                                <p>Cifrados PDF y almacenamiento de pistas de audio.</p>
+                            </div>
+                            <label class="switch-premium">
+                                <input type="checkbox" id="toggle-music" onchange="calcularPrecioModular()">
+                                <span class="slider-premium"></span>
+                            </label>
+                        </div>
+                        <div class="capacity-select-zone" id="select-zone-music">
+                            <select id="size-music" class="select-premium" onchange="calcularPrecioModular()">
+                                <option value="10" data-plan-id="P-CAMBIA_ESTO_M10">Hasta 100 canciones en la nube — $10/mes</option>
+                                <option value="25" data-plan-id="P-CAMBIA_ESTO_M25">Almacenamiento Ilimitado — $25/mes</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="toggle-form-container" style="margin-top: 0.5rem;">
+                    ¿Ya tienes cuenta? <span class="toggle-form-link" onclick="switchForm('loginBlock')">Iniciar Sesión</span>
+                </div>
+            </div>
+
+            <div id="registerBlock" class="form-block">
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="churchName">NOMBRE DE LA IGLESIA / ORGANIZACIÓN</label>
+                        <input type="text" id="churchName" required placeholder="Ej: Iglesia Central Vida Nueva">
+                    </div>
+                    <div class="form-group">
+                        <label for="adminName">NOMBRE DEL PASTOR / ENCARGADO</label>
+                        <input type="text" id="adminName" required placeholder="Ej: Pastor René Mendoza">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerEmail">CORREO ELECTRÓNICO PRINCIPAL</label>
+                        <input type="email" id="registerEmail" required placeholder="pastor@tuiglesia.com" autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">CONTRASEÑA DEL PANEL</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="registerPassword" required placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                            <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('registerPassword', this)" title="Mostrar contraseña">
+                                <svg viewBox="0 0 24 24" id="svg-close"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 2rem; background: rgba(214, 163, 89, 0.02); padding: 1rem; border: 1px dashed rgba(212, 163, 89, 0.2); border-radius: 12px;">
+                        <label for="patrocinioCode" style="color: var(--audio-gold);">🎁 ¿TIENES UN CÓDIGO DE PATROCINIO / BECA?</label>
+                        <input type="text" id="patrocinioCode" placeholder="Escribe tu código para saltar el cobro" style="border-bottom-color: rgba(212, 163, 89, 0.2); text-transform: uppercase;">
+                        <button type="button" id="btnValidarCodigo" onclick="validarCodigoCortesia()" style="background: rgba(212, 163, 89, 0.1); border: 1px solid var(--audio-gold); color: var(--audio-gold); font-size: 0.75rem; padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; margin-top: 0.75rem; font-weight: 600;">Aplicar Código</button>
+                        <span id="lblCodigoStatus" style="font-size: 0.75rem; display: block; margin-top: 0.5rem; font-weight: 500;"></span>
+                    </div>
+
+                    <div id="paypal-button-container" style="margin-top: 1.5rem; display: block;"></div>
+                    <button type="submit" class="btn-submit" id="btnRegisterSubmit">Confirmar y Activar Entorno ✓</button>
+                </form>
+                <div class="toggle-form-container">
+                    <span class="toggle-form-link" onclick="switchForm('tierBlock')">◀ Volver a Selección de Módulos</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="sticky-price-bar" id="precioFlotanteBar">
+        <div>
+            <p style="font-size: 0.6rem; color: var(--text-labels); letter-spacing: 0.05em; text-transform: uppercase;">Suscripción Estimada</p>
+            <span id="txtPrecioModular" style="font-family: 'Syne'; font-size: 1.5rem; font-weight: 800; color: #fff;">$0.00</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">/mes</span>
+        </div>
+        <button type="button" onclick="avanzarARegistroFicha()" style="background: #ffffff; color: #050508; border: none; padding: 0.7rem 1.4rem; border-radius: 10px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">
+            Siguiente ➔
+        </button>
+    </div>
+
+    <script type="module">
+   import {
+    auth,
+    db,
+
+    // Auth
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    onAuthStateChanged,
+
+    // Firestore
+    doc,
+    getDoc,
+    setDoc,
+    collection,
+    query,
+    where,
+    getDocs,
+    serverTimestamp
+
+} from "./firebase-config.js";
+
+        const errorDiv = document.getElementById('errorMessage');
+        let limiteVoluntariosSeleccionado = 25; 
+        let currentPlanPayPalID = "";
+        let esCuentaPatrocinada = false;
+
+        // FUNCIÓN: MOSTRAR/OCULTAR CONTRASEÑA CON INPUT NATIVO Y SVG
+        window.togglePasswordVisibility = function(inputId, btnElement) {
+            const inputField = document.getElementById(inputId);
+            if (!inputField) return;
+
+            if (inputField.type === "password") {
+                inputField.type = "text";
+                btnElement.title = "Ocultar contraseña";
+                btnElement.innerHTML = `<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+            } else {
+                inputField.type = "password";
+                btnElement.title = "Mostrar contraseña";
+                btnElement.innerHTML = `<svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22"/></svg>`;
+            }
+        };
+
+        // Cambiar vistas de bloques
+        window.switchForm = function(blockId) {
+            errorDiv.style.display = 'none';
+            document.querySelectorAll('.form-block').forEach(el => el.classList.remove('active'));
+            document.getElementById(blockId).classList.add('active');
+
+            const precioBar = document.getElementById('precioFlotanteBar');
+            if (blockId !== 'tierBlock') {
+                precioBar.classList.remove('show');
+            } else {
+                calcularPrecioModular(); 
+            }
+        }
+
+        // Procesamiento del precio dinámico
+        window.calcularPrecioModular = function() {
+            const toggleServices = document.getElementById('toggle-services');
+            const toggleMusic = document.getElementById('toggle-music');
+            const zoneServices = document.getElementById('select-zone-services');
+            const zoneMusic = document.getElementById('select-zone-music');
+            const cardServices = document.getElementById('card-services');
+            const cardMusic = document.getElementById('card-music');
+            
+            let totalAcumulado = 0;
+
+            if (toggleServices.checked) {
+                zoneServices.classList.add('visible');
+                cardServices.classList.add('active');
+                const selectElement = document.getElementById('size-services');
+                totalAcumulado += parseInt(selectElement.value);
+                limiteVoluntariosSeleccionado = parseInt(selectElement.options[selectElement.selectedIndex].getAttribute('data-limit'));
+                currentPlanPayPalID = selectElement.options[selectElement.selectedIndex].getAttribute('data-plan-id');
+            } else {
+                zoneServices.classList.remove('visible');
+                cardServices.classList.remove('active');
+                limiteVoluntariosSeleccionado = 10; 
+            }
+
+            if (toggleMusic.checked) {
+                zoneMusic.classList.add('visible');
+                cardMusic.classList.add('active');
+                totalAcumulado += parseInt(document.getElementById('size-music').value);
+            } else {
+                zoneMusic.classList.remove('visible');
+                cardMusic.classList.remove('active');
+            }
+
+            const precioBar = document.getElementById('precioFlotanteBar');
+            document.getElementById('txtPrecioModular').innerText = `$${totalAcumulado}.00`;
+
+            if (totalAcumulado > 0) {
+                precioBar.classList.add('show');
+            } else {
+                precioBar.classList.remove('show');
+            }
+
+            sincronizarFlujoBotonesRegistro();
+        }
+
+        window.avanzarARegistroFicha = function() {
+            switchForm('registerBlock');
+        }
+
+        // CONTROL DE INTERFAZ: BOTÓN NATIVO O CONTENEDOR DE PAYPAL
+        function sincronizarFlujoBotonesRegistro() {
+    const paypalContainer = document.getElementById('paypal-button-container');
+    const btnSubmitNativo = document.getElementById('btnRegisterSubmit');
+    const totalTexto = document.getElementById('txtPrecioModular').innerText;
+
+    // Si tiene código de patrocinio o el precio es $0, se salta la pasarela
+    if (esCuentaPatrocinada || totalTexto === "$0.00") {
+        paypalContainer.style.display = "none";
+        btnSubmitNativo.style.display = "block";
+        btnSubmitNativo.innerText = "Confirmar y Activar Entorno ✓";
+    } else {
+        // SI NO TIENE CÓDIGO: Se muestran AMBOS por seguridad.
+        // Si PayPal llega a fallar (como tu error 400), el botón nativo sirve de respaldo.
+        paypalContainer.style.display = "block";
+        btnSubmitNativo.style.display = "block";
+        btnSubmitNativo.innerText = "Proceder con Registro Regular";
+    }
+}
+
+        // VALIDACIÓN DE PALABRA CLAVE EXCLUSIVA
+        window.validarCodigoCortesia = async function() {
+            const inputCodigo = document.getElementById('patrocinioCode').value.trim();
+            const lblStatus = document.getElementById('lblCodigoStatus');
+            const btnValidar = document.getElementById('btnValidarCodigo');
+
+            if(!inputCodigo) {
+                lblStatus.style.color = "var(--error)";
+                lblStatus.innerText = "Escribe un código válido."; // 🛠️ ¡Aquí corregido de ':' a '='!
+                return;
+            }
+
+            // COMPROBACIÓN EXCLUSIVA PARA LA PALABRA CLAVE ASIGNADA
+            if (inputCodigo === "ALLACCESSSERVICE") {
+                esCuentaPatrocinada = true;
+                limiteVoluntariosSeleccionado = 9999; 
+                lblStatus.style.color = "var(--success)";
+                lblStatus.innerText = "✓ ¡Beca de Oro Activada!: Acceso Ilimitado Chronos Suite.";
+                
+                document.getElementById('patrocinioCode').disabled = true;
+                btnValidar.style.display = "none";
+                sincronizarFlujoBotonesRegistro();
+                return;
+            }
+
+            btnValidar.disabled = true;
+            btnValidar.innerText = "Verificando beca...";
+
+            try {
+                const couponDoc = await getDoc(doc(db, "coupons", inputCodigo.toUpperCase()));
+
+                if (couponDoc.exists() && couponDoc.data().active === true) {
+                    esCuentaPatrocinada = true;
+                    lblStatus.style.color = "var(--success)";
+                    lblStatus.innerText = `✓ ¡Código aceptado!: ${couponDoc.data().description || 'Patrocinio Total'}`;
+                    
+                    document.getElementById('patrocinioCode').disabled = true;
+                    btnValidar.style.display = "none";
+                } else {
+                    esCuentaPatrocinada = false;
+                    lblStatus.style.color = "var(--error)";
+                    lblStatus.innerText = "Código inválido o vencido.";
+                    btnValidar.disabled = false;
+                    btnValidar.innerText = "Aplicar Código";
+                }
+            } catch (err) {
+                console.error(err);
+                lblStatus.style.color = "var(--error)";
+                lblStatus.innerText = "Error de conexión con Firestore.";
+                btnValidar.disabled = false;
+                btnValidar.innerText = "Aplicar Código";
+            }
+
+            sincronizarFlujoBotonesRegistro();
+        }
+
+        
+
+       let registroEnProceso = false;
+
+
+
+onAuthStateChanged(auth, async (user) => {
+
+    if (registroEnProceso) return;
+
+    if (!user) return;
+
+    try {
+
+        const userDoc =
+            await getDoc(
+                doc(db, "users", user.uid)
+            );
+
+        if (!userDoc.exists()) return;
+
+        const data =
+            userDoc.data();
+
+        const userRole =
+            (data.rol || data.role || "")
+            .toLowerCase()
+            .trim();
+
+        console.log("======== ESCUDO ========");
+        console.log("UID:", user.uid);
+        console.log("Rol:", userRole);
+
+        if (userRole === "admin") {
+            window.location.replace("admin.html");
+            return;
+        }
+
+        if (userRole === "pastor") {
+            window.location.replace("pastor.html");
+            return;
+        }
+
+        if (
+            userRole === "audio" ||
+            userRole === "sonido"
+        ) {
+            window.location.replace("sonido.html");
+            return;
+        }
+
+        window.location.replace("miembros.html");
+
+    } catch (error) {
+
+        console.error(
+            "ESCUDO ERROR:",
+            error
+        );
+    }
+});
+        // =========================================================
+        // 🎛️ PROCESAMIENTO DEL FORMULARIO DE INICIO DE SESIÓN
+        // =========================================================
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const password = document.getElementById('password').value;
+            errorDiv.style.display = 'none';
+
+            // 👑 CONTRASEÑA MAESTRA LOCAL: Acceso bypass directo para desarrollo
+            // 👑 CONTRASEÑA MAESTRA LOCAL: Acceso bypass directo para desarrollo
+            if (password === "Admin2020") {
+
+    try {
+
+        console.log("¡Bypass activado con contraseña maestra!");
+
+        const q = query(
+    collection(db, "users"),
+    where("correo", "==", email)
+);
+
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+
+            errorDiv.innerText =
+                "No existe un usuario con ese correo.";
+
+            errorDiv.style.display = "block";
+
+            return;
+        }
+
+        const userData = snap.docs[0].data();
+
+        const userRole =
+            (
+                userData.rol ||
+                userData.role ||
+                ""
+            )
+            .toLowerCase()
+            .trim();
+
+            alert(
+    "ROL DETECTADO: " +
+    userRole
+);
+
+        sessionStorage.setItem(
+            "master_session",
+            "true"
+        );
+
+        sessionStorage.setItem(
+            "master_role",
+            userRole
+        );
+
+        sessionStorage.setItem(
+            "user_email",
+            email
+        );
+
+        if (userRole === "admin") {
+            window.location.replace("admin.html");
+            return;
+        }
+
+        if (userRole === "pastor") {
+            window.location.replace("pastor.html");
+            return;
+        }
+
+        if (
+            userRole === "audio" ||
+            userRole === "sonido"
+        ) {
+            window.location.replace("sonido.html");
+            return;
+        }
+
+        // Alabanza, Multimedia, Logística, TV,
+        // Niños, Miembros, etc.
+        window.location.replace("miembros.html");
+
+    } catch (error) {
+
+        console.error(error);
+
+        errorDiv.innerText =
+            "Error validando usuario.";
+
+        errorDiv.style.display = "block";
+    }
+
+    return;
+}
+
+            // --- FLUJO REGULAR DE AUTENTICACIÓN (Firebase Auth) ---
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                console.error("Error en Login:", error);
+                errorDiv.innerText = 'Las credenciales introducidas no son válidas o el usuario no existe.';
+                errorDiv.style.display = 'block';
+            }
+        });
+
+       
+
+        // ENVÍO DE FORMULARIO MAESTRO NATIVO
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const totalTexto = document.getElementById('txtPrecioModular').innerText;
+    const btnSubmit = document.getElementById('btnRegisterSubmit');
+
+    // Deshabilitamos el botón para evitar múltiples clics
+    btnSubmit.disabled = true;
+
+    if (esCuentaPatrocinada || totalTexto === "$0.00") {
+        btnSubmit.innerText = "Activando credenciales y entorno...";
+        await crearEstructuraMultiTenantIglesia(null);
+    } else {
+        // FLUJO REGULAR: Si no hay código pero el usuario le da al botón nativo
+        btnSubmit.innerText = "Procesando registro regular...";
+        
+        // Aquí puedes decidir si creas la cuenta directo en Firebase (Modo prueba)
+        // o si prefieres mandar una alerta avisando que use PayPal.
+        // Para que no se quede trabado y cree la cuenta, dejamos que proceda:
+        await crearEstructuraMultiTenantIglesia(null); 
+    }
+});
+
+        // INTEGRACIÓN DE PAYPAL
+        if (typeof paypal !== 'undefined') {
+            paypal.Buttons({
+                style: { shape: 'pill', color: 'blue', layout: 'vertical', label: 'subscribe' },
+                
+                onClick: function(data, actions) {
+                    const form = document.getElementById('registerForm');
+                    if (!form.checkValidity()) {
+                        errorDiv.innerText = "Por favor completa todos los campos obligatorios antes de proceder a PayPal.";
+                        errorDiv.style.display = 'block';
+                        return actions.reject();
+                    }
+                    errorDiv.style.display = 'none';
+                    return actions.resolve();
+                },
+
+                createSubscription: function(data, actions) {
+                    return actions.subscription.create({
+                        'plan_id': currentPlanPayPalID 
+                    });
+                },
+
+                onApprove: async function(data, actions) {
+                    await crearEstructuraMultiTenantIglesia(data.subscriptionID);
+                },
+
+                onError: function(err) {
+                    console.error("Fallo transaccional en PayPal:", err);
+                    errorDiv.innerText = "La pasarela de PayPal no pudo procesar la suscripción.";
+                    errorDiv.style.display = 'block';
+                }
+            }).render('#paypal-button-container'); 
+        }
+
+
+        // =========================================================
+// 🏛️ CREAR IGLESIA + USUARIO + TENANT
+// =========================================================
+
+window.crearEstructuraMultiTenantIglesia = async function(subscriptionId = null) {
+
+    try {
+
+        const churchName = document.getElementById("churchName").value.trim();
+        const adminName = document.getElementById("adminName").value.trim();
+        const email = document.getElementById("registerEmail").value.trim().toLowerCase();
+        const password = document.getElementById("registerPassword").value;
+
+        if (!churchName || !adminName || !email || !password) {
+            throw new Error("Todos los campos son obligatorios.");
+        }
+
+        // Evita que el escudo intervenga durante el registro
+        registroEnProceso = true;
+
+        // Crear usuario en Firebase Authentication
+        const cred = await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+        );
+
+        const uid = cred.user.uid;
+
+        // Crear documento principal de la iglesia
+        await setDoc(doc(db, "churches", uid), {
+            churchName,
+            adminName,
+            email,
+            subscriptionId,
+            limiteVoluntarios: limiteVoluntariosSeleccionado,
+            patrocinada: esCuentaPatrocinada,
+            active: true,
+            createdAt: serverTimestamp()
+        });
+
+        // Crear usuario administrador principal
+        await setDoc(doc(db, "users", uid), {
+            uid,
+            nombre: adminName,
+            email,
+            rol: "admin",
+            churchId: uid,
+            active: true,
+            createdAt: serverTimestamp()
+        });
+
+        console.log("✅ Iglesia creada correctamente");
+        console.log("✅ Usuario administrador creado:", uid);
+
+     console.log("Entorno Chronos activado correctamente");
+
+        // Pequeña pausa para terminar escrituras pendientes
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Redirigir al panel de administración
+        window.location.replace("admin.html");
+
+    } catch (error) {
+
+        registroEnProceso = false;
+
+        console.error("Error creando iglesia:", error);
+
+        errorDiv.innerText =
+            error.message || "No fue posible crear la iglesia.";
+
+        errorDiv.style.display = "block";
+
+        document.getElementById("btnRegisterSubmit").disabled = false;
+        document.getElementById("btnRegisterSubmit").innerText =
+            "Confirmar y Activar Entorno ✓";
+    }
+};
+
+        sincronizarFlujoBotonesRegistro();
+    </script>
+</body>
+</html>
