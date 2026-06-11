@@ -1834,63 +1834,62 @@ async function abrirMultitrackMiembro(songTitle) {
 
 
 
-window.reproducirCancion = async (song) => {
+window.reproducirCancion = (song) => {
+    console.log("Abriendo mezclador para:", song.title);
     const container = document.getElementById("stemsPlayerContainer");
     const slidersContainer = document.getElementById("slidersContainer");
     
+    if (!container || !slidersContainer) {
+        console.error("¡No encontré los contenedores en el HTML!");
+        return;
+    }
+
     document.getElementById("playingSongTitle").innerText = `Reproduciendo: ${song.title}`;
 
-    window.detenerPlay();
+    // 1. Limpieza
+    if (window.audios) {
+        window.audios.forEach(a => { a.pause(); a.src = ""; });
+    }
+    window.audios = [];
     slidersContainer.innerHTML = "";
-    
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') await audioCtx.resume();
 
     const orden = ['click', 'cue', 'drums', 'instrumental', 'voces'];
 
-    for (const trackName of orden) {
+    // 2. Crear los faders
+    orden.forEach(trackName => {
         const claveReal = Object.keys(song.stems).find(k => k.toLowerCase() === trackName.toLowerCase());
         
         if (claveReal && song.stems[claveReal]) {
-            // 🌟 CAMBIO: Usamos el objeto Audio nativo (evita el bloqueo de fetch)
-            const audio = new Audio(song.stems[claveReal]);
-            audio.crossOrigin = "anonymous"; 
-            audio.preload = "auto";
-            
-            // Creamos la conexión profesional al motor de audio
-            const source = audioCtx.createMediaElementSource(audio);
-            const gainNode = audioCtx.createGain();
-            
-            source.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            // Guardamos la referencia para el Play/Stop
-            audioBuffers.push({ audio: audio, gainNode: gainNode });
+            const url = song.stems[claveReal];
+            const audio = new Audio(url);
+            audio.loop = true;
+            window.audios.push(audio);
 
-            // Crear el Fader
             const wrapper = document.createElement("div");
-            wrapper.className = "mix-fader-wrapper";
-            wrapper.style.cssText = `display: flex; flex-direction: column; align-items: center; width: 60px; height: 220px; flex-shrink: 0; gap: 10px;`;
+            wrapper.style.cssText = "display: flex; flex-direction: column; align-items: center; width: 60px; gap: 10px;";
 
             const slider = document.createElement("input");
             slider.type = "range";
-            slider.className = "mix-fader";
+            slider.className = "mix-fader"; // Asegúrate de que esta clase exista en tu CSS
             slider.min = 0; slider.max = 1; slider.step = 0.01; slider.value = 1;
 
             slider.addEventListener("input", (e) => {
-                gainNode.gain.value = parseFloat(e.target.value);
+                audio.volume = e.target.value;
             });
 
             const label = document.createElement("label");
             label.textContent = trackName.toUpperCase();
-            label.style.cssText = `color:white; font-size:.65rem; font-weight:600; text-transform:uppercase;`;
+            label.style.color = "white";
 
             wrapper.appendChild(slider);
             wrapper.appendChild(label);
             slidersContainer.appendChild(wrapper);
         }
-    }
-    container.style.display = "flex";
+    });
+
+    // 3. ¡Aquí está la clave! Esto es lo que abre la ventana
+    container.style.display = "flex"; 
+    console.log("Ventana abierta.");
 };
 
 
@@ -1898,24 +1897,40 @@ window.reproducirCancion = async (song) => {
 
 // 🌟 Función Play sincronizada para el botón
 window.iniciarPlay = () => {
-    // Esto es lo que evita que suene regado
-    const time = audioCtx.currentTime + 0.1;
-    audioBuffers.forEach(item => {
-        item.audio.currentTime = 0; // Reset
-        item.audio.play();          // Play inmediato
+    console.log("Iniciando pistas...");
+    
+    if (!window.audios || window.audios.length === 0) {
+        alert("No hay pistas cargadas. Primero abre una canción.");
+        return;
+    }
+
+    window.audios.forEach((audio, index) => {
+        // Forzamos el volumen alto
+        audio.volume = 1;
+        audio.muted = false;
+
+        // Intentamos reproducir
+        audio.play().then(() => {
+            console.log(`Pista ${index} sonando.`);
+        }).catch(err => {
+            console.error(`Pista ${index} falló:`, err);
+            // Si el error es NotAllowedError, el navegador bloquea el audio
+            if (err.name === 'NotAllowedError') {
+                alert("El navegador bloqueó el audio. Haz clic en la pantalla primero.");
+            }
+        });
     });
 };
 
 window.detenerPlay = () => {
     console.log("Limpiando memoria de audio...");
-    if (typeof audioElements !== 'undefined') {
-        audioElements.forEach(a => {
+    if (typeof window.audios !== 'undefined') {
+        window.audios.forEach(a => {
             a.pause();
             a.currentTime = 0;
-            a.src = ""; // Elimina el sonido fantasma
-            a.load();   // Libera el buffer del navegador
+            a.src = ""; // Esto limpia la memoria
         });
-        audioElements = [];
+        window.audios = [];
     }
 };
 
@@ -1943,28 +1958,34 @@ document.getElementById("btnCloseMultitrack")?.addEventListener("click", () => {
     // 2. Manejo de Play (Sincronizado)
     if (e.target.id === "btnPlayFinal") {
         console.log("Preparando sincronización...");
-        if (typeof audioElements !== 'undefined' && audioElements.length > 0) {
+        
+        if (typeof window.audios !== 'undefined' && window.audios.length > 0) {
             let listos = 0;
-            audioElements.forEach(a => {
+            
+            window.audios.forEach(a => {
                 a.pause();
                 a.currentTime = 0;
-                // Si ya está listo, lo contamos
+                
+                // Si el archivo ya está listo, lo contamos
                 if (a.readyState >= 3) {
                     listos++;
                 } else {
                     a.oncanplaythrough = () => {
                         listos++;
-                        if (listos === audioElements.length) {
-                            audioElements.forEach(audio => audio.play());
+                        if (listos === window.audios.length) {
+                            window.audios.forEach(aud => aud.play());
                         }
                     };
                     a.load();
                 }
             });
+
             // Si todos ya estaban cargados previamente
-            if (listos === audioElements.length) {
-                audioElements.forEach(a => a.play());
+            if (listos === window.audios.length) {
+                window.audios.forEach(a => a.play());
             }
+        } else {
+            console.error("No hay audios en window.audios");
         }
     }
 
