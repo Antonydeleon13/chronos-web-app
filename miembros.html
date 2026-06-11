@@ -1838,113 +1838,82 @@ window.reproducirCancion = (song) => {
     
     document.getElementById("playingSongTitle").innerText = `Reproduciendo: ${song.title}`;
 
-    // Limpiar reproductor anterior
-    audioElements.forEach(audio => {
-        audio.pause();
-        audio.src = "";
-    });
-    audioElements.length = 0;
+    // 1. Limpieza total y profunda antes de cargar nada nuevo
+    window.detenerPlay();
     slidersContainer.innerHTML = "";
 
-    // 🌟 ORDEN ESTRICTO: click, cues, drums, instrumental, voces
     const orden = ['click', 'cue', 'drums', 'instrumental', 'voces'];
 
     orden.forEach(trackName => {
-        // Buscamos el nombre del canal en el objeto song.stems (sin importar mayúsculas)
         const claveReal = Object.keys(song.stems).find(k => k.toLowerCase() === trackName.toLowerCase());
         
         if (claveReal && song.stems[claveReal]) {
-            const url = song.stems[claveReal];
-            const audio = new Audio(url);
+            const audio = new Audio(song.stems[claveReal]);
             audio.loop = true;
-            audio.preload = "auto";
+            audio.preload = "auto"; // Pre-cargamos para sincronizar
             audioElements.push(audio);
 
-           
-const wrapper = document.createElement("div");
-wrapper.className = "mix-fader-wrapper"; // 🌟 Usamos la clase CSS en lugar de estilos en línea
-wrapper.style.gap = "10px"; // Solo el gap aquí
+            // Contenedor (Wrapper) estilo Canal de Consola
+            const wrapper = document.createElement("div");
+            wrapper.className = "mix-fader-wrapper";
+            wrapper.style.cssText = `
+                display: flex; 
+                flex-direction: column; 
+                align-items: center; 
+                justify-content: flex-start; 
+                width: 60px; 
+                height: 220px; 
+                flex-shrink: 0; 
+                gap: 10px;
+            `;
 
-// 🌟 AJUSTE: Usamos anchos relativos o condicionales según el dispositivo
-const esMovil = window.innerWidth < 768;
-const anchoCanal = esMovil ? "65px" : "90px";
-const largoFader = esMovil ? "100px" : "180px";
+            // Fader (Slider Vertical Estándar)
+            const slider = document.createElement("input");
+            slider.type = "range";
+            slider.className = "mix-fader";
+            slider.min = 0;
+            slider.max = 1;
+            slider.step = 0.01;
+            slider.value = 1;
 
-wrapper.style.cssText = `
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: flex-start; 
-    width: 60px; 
-    height: 220px; 
-    flex-shrink: 0; 
-    gap: 10px;
-`;
-
-            // Nombre del stem (Etiqueta)
-            const label = document.createElement("label");
-            label.textContent = trackName.toUpperCase();
-            label.style.cssText = `color:white; font-size:.75rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase;`;
-
-            // Fader (Slider)
-          const slider = document.createElement("input");
-slider.type = "range";
-slider.className = "mix-fader"; // La clase ya tiene el writing-mode
-slider.min = 0;
-slider.max = 1;
-slider.step = 0.01;
-slider.value = 1;
-
-            slider.addEventListener("input", () => {
-                audio.volume = parseFloat(slider.value);
+            slider.addEventListener("input", (e) => {
+                audio.volume = parseFloat(e.target.value);
             });
 
-            wrapper.appendChild(label);
+            // Etiqueta (Label)
+            const label = document.createElement("label");
+            label.textContent = trackName.toUpperCase();
+            label.style.cssText = `color:white; font-size:.65rem; font-weight:600; text-transform:uppercase;`;
+
+            // Estructura: Fader arriba, Etiqueta abajo
             wrapper.appendChild(slider);
+            wrapper.appendChild(label);
             slidersContainer.appendChild(wrapper);
         }
     });
 
-    // Mostrar mezclador
-    container.style.display = "block";
-
-    // Aviso móvil
-    if (window.innerWidth < 768) {
-        console.log("Gira el teléfono para una mejor experiencia");
-    }
-};
-
-// 🌟 ESTAS SON LAS FUNCIONES QUE FALTABAN LLAMAR
-window.iniciarPlay = () => {
-    console.log("Iniciando pistas...");
-    audioElements.forEach(a => {
-        a.play().catch(e => console.error("Error al reproducir:", e));
-    });
+    // Mostrar contenedor (Flex para centrar todo según tu CSS)
+    container.style.display = "flex";
 };
 
 window.detenerPlay = () => {
-    audioElements.forEach(a => { a.pause(); a.currentTime = 0; });
+    console.log("Limpiando memoria de audio...");
+    if (typeof audioElements !== 'undefined') {
+        audioElements.forEach(a => {
+            a.pause();
+            a.currentTime = 0;
+            a.src = ""; // Elimina el sonido fantasma
+            a.load();   // Libera el buffer del navegador
+        });
+        audioElements = [];
+    }
 };
 
-
-document
-    .getElementById(
-        "btnCloseMultitrack"
-    )
-    ?.addEventListener(
-        "click",
-        () => {
-
-            detenerPlay();
-
-            document
-                .getElementById(
-                    "stemsPlayerContainer"
-                )
-                .style.display = "none";
-
-        }
-    );
+// Manejador del botón cerrar
+document.getElementById("btnCloseMultitrack")?.addEventListener("click", () => {
+    window.detenerPlay();
+    document.getElementById("stemsPlayerContainer").style.display = "none";
+});
 
 
 
@@ -1989,10 +1958,12 @@ document
         }
     }
 
-    // 3. Manejo de Stop
+
+    // 3. Manejo de Stop (CORREGIDO)
     if (e.target.id === "btnStopFinal") {
-        if (typeof audioElements !== 'undefined') {
-            audioElements.forEach(a => { a.pause(); a.currentTime = 0; });
+        console.log("Deteniendo audio totalmente...");
+        if (typeof detenerPlay === 'function') {
+            detenerPlay(); // Llama a la nueva versión que vacía el src
         }
     }
 
