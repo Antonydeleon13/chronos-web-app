@@ -694,6 +694,8 @@ let audioElements = [];
 
 let stems = {};
 let gains = {};
+let audioCtx = null;
+let audioBuffers = []; 
 
 
 window.selectedServiceId = null;
@@ -1832,68 +1834,76 @@ async function abrirMultitrackMiembro(songTitle) {
 
 
 
-window.reproducirCancion = (song) => {
+window.reproducirCancion = async (song) => {
     const container = document.getElementById("stemsPlayerContainer");
     const slidersContainer = document.getElementById("slidersContainer");
     
     document.getElementById("playingSongTitle").innerText = `Reproduciendo: ${song.title}`;
 
-    // 1. Limpieza total y profunda antes de cargar nada nuevo
-    window.detenerPlay();
+    // 1. Limpieza total
+    window.detenerPlay(); 
     slidersContainer.innerHTML = "";
+    
+    // 2. Inicializar contexto y reanudar si está suspendido (Crucial en móvil)
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
 
     const orden = ['click', 'cue', 'drums', 'instrumental', 'voces'];
 
-    orden.forEach(trackName => {
+    // 3. Procesar canales
+    for (const trackName of orden) {
         const claveReal = Object.keys(song.stems).find(k => k.toLowerCase() === trackName.toLowerCase());
         
         if (claveReal && song.stems[claveReal]) {
+            // A) Carga nativa (evita bloqueo CORS de fetch en móviles)
             const audio = new Audio(song.stems[claveReal]);
-            audio.loop = true;
-            audio.preload = "auto"; // Pre-cargamos para sincronizar
-            audioElements.push(audio);
+            audio.crossOrigin = "anonymous";
+            audio.preload = "auto";
+            
+            // Conectamos el elemento de audio al motor profesional
+            const source = audioCtx.createMediaElementSource(audio);
+            const gainNode = audioCtx.createGain();
+            
+            source.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            // Guardamos la referencia para el Play/Stop sincronizado
+            audioBuffers.push({ audio: audio, gainNode: gainNode });
 
-            // Contenedor (Wrapper) estilo Canal de Consola
+            // B) Crear el Fader visual
             const wrapper = document.createElement("div");
             wrapper.className = "mix-fader-wrapper";
-            wrapper.style.cssText = `
-                display: flex; 
-                flex-direction: column; 
-                align-items: center; 
-                justify-content: flex-start; 
-                width: 60px; 
-                height: 220px; 
-                flex-shrink: 0; 
-                gap: 10px;
-            `;
+            wrapper.style.cssText = `display: flex; flex-direction: column; align-items: center; width: 60px; height: 220px; flex-shrink: 0; gap: 10px;`;
 
-            // Fader (Slider Vertical Estándar)
             const slider = document.createElement("input");
             slider.type = "range";
             slider.className = "mix-fader";
-            slider.min = 0;
-            slider.max = 1;
-            slider.step = 0.01;
-            slider.value = 1;
+            slider.min = 0; slider.max = 1; slider.step = 0.01; slider.value = 1;
 
             slider.addEventListener("input", (e) => {
-                audio.volume = parseFloat(e.target.value);
+                gainNode.gain.value = parseFloat(e.target.value);
             });
 
-            // Etiqueta (Label)
             const label = document.createElement("label");
             label.textContent = trackName.toUpperCase();
             label.style.cssText = `color:white; font-size:.65rem; font-weight:600; text-transform:uppercase;`;
 
-            // Estructura: Fader arriba, Etiqueta abajo
             wrapper.appendChild(slider);
             wrapper.appendChild(label);
             slidersContainer.appendChild(wrapper);
         }
-    });
+    }
 
-    // Mostrar contenedor (Flex para centrar todo según tu CSS)
     container.style.display = "flex";
+};
+
+// 🌟 Función Play sincronizada para el botón
+window.iniciarPlay = () => {
+    console.log("Iniciando pistas sincronizadas...");
+    audioBuffers.forEach(item => {
+        item.audio.currentTime = 0; 
+        item.audio.play().catch(e => console.error("Error de play:", e));
+    });
 };
 
 window.detenerPlay = () => {
