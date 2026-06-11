@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
         :root {
@@ -35,6 +36,10 @@
         @media (min-width: 768px) {
             body { padding: 1.5rem; }
         }
+        
+        body {
+    display: none;
+}
 
         body::before {
             content: ''; position: absolute; width: 800px; height: 800px;
@@ -338,6 +343,42 @@
 }
 
 
+/* Ocultar TODO lo que sea tab-content y subtab-content por defecto */
+.tab-content, .subtab-content { 
+    display: none !important; 
+}
+
+/* Solo mostrar cuando tengan la clase active */
+.tab-content.active, .subtab-content.active { 
+    display: block !important; 
+}
+
+/* Contenedor del fader (el "carril" oscuro) */
+.vertical-slider {
+    writing-mode: vertical-lr;
+    direction: rtl;
+    appearance: auto;
+    width: 24px;       /* Ancho del fader */
+    height: 180px;      /* Altura profesional */
+    background: #1a1a1a; /* Fondo oscuro del canal */
+    border-radius: 4px;
+    border: 1px solid #333;
+    margin: 0 auto;
+    padding: 5px 0;
+}
+
+/* El "botón" del fader */
+.vertical-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 14px;
+    background: #d4d4d4; /* Color gris claro del fader */
+    border-radius: 2px;
+    border: 1px solid #000;
+    cursor: pointer;
+    box-shadow: 0 0 4px rgba(0,0,0,0.5);
+}
+
     </style>
 </head>
 <body>
@@ -391,7 +432,9 @@
         <div class="tabs-nav">
     <button id="btn-services" class="tab-btn active" onclick="switchTab('services-section')">GENERAL</button>
     <button id="btn-people" class="tab-btn" onclick="switchTab('people-section')">VOLUNTARIOS</button>
+    
     <button id="btn-songs" class="tab-btn" onclick="switchTab('songs-section')">CANCIONES</button>
+    <button id="btn-inventory" class="tab-btn" onclick="switchTab('inventory-section')">INVENTARIO</button>
 </div>
 
         <div id="services-section" class="tab-content active">
@@ -493,7 +536,7 @@
                     
                     <div id="serviceSketch" contenteditable="false" style="width: 100%; min-height: 180px; max-height: 400px; overflow-y: auto; padding: 1.5rem; background-color: rgba(10, 11, 16, 0.3); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 14px; color: var(--text-main); font-size: 0.9rem; line-height: 1.6; outline: none; transition: all 0.3s ease;" placeholder="El pastor no ha redactado el bosquejo aún..."></div>
                     
-                    <div style="display: flex; gap: 0.75rem; margin-top: 1rem; justify-content: flex-end;">
+                   <div style="display: flex; gap: 0.75rem; margin-top: 1rem; justify-content: flex-end;">
                         <button type="button" id="btnModoEdicionSketch" style="padding: 0.6rem 1.2rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); border-radius: 10px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
                             ✏️ Editar Notas
                         </button>
@@ -503,13 +546,20 @@
                     </div>
                 </div>
             </div>
-
         </div> 
     </div> 
 </div>
 
-                </div> </div> </div> <div id="people-section" class="tab-content">
-            <div class="grid-people">
+<div id="people-section" class="tab-content">
+    <div class="subtabs-nav">   
+        <button id="btn-people-directory" class="subtab-btn active" onclick="switchPeopleSubTab('people-directory')">Personas</button>
+        <button id="btn-teams-directory" class="subtab-btn" onclick="switchPeopleSubTab('teams-directory')">Teams</button>
+    </div>
+
+    <!-- PERSONAS -->
+    <div id="people-directory" class="subtab-content active">
+          <div class="grid-people">
+
                 <div class="panel-window">
                     <h3>Registrar Persona</h3>
                     <form id="personForm">
@@ -583,93 +633,262 @@
     </select>
 </div>
 
-                        <div class="section-divider">PROCESO ESPIRITUAL</div>
-                        <div class="form-row" style="margin-bottom: 0.75rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                            <label class="checkbox-group" for="isBaptized">
-                                <input type="checkbox" id="isBaptized">
-                                <span>¿Ya se bautizó?</span>
-                            </label>
-                            <label class="checkbox-group" for="inFriendshipGroup">
-                                <input type="checkbox" id="inFriendshipGroup">
-                                <span>¿Grupo de Amistad?</span>
-                            </label>
-                        </div>
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                            <label class="checkbox-group" for="hasADL">
-                                <input type="checkbox" id="hasADL">
-                                <span>ADL</span>
-                            </label>
-                            <label class="checkbox-group" for="hasEncounter">
-                                <input type="checkbox" id="hasEncounter">
-                                <span>Encuentro</span>
-                            </label>
-                        </div>
-                        <button type="submit" class="btn-submit">Guardar Miembro</button>
-                    </form>
-                </div>
-
-               <div class="panel-window">
-                    <h3>Directorio General de la Iglesia</h3>
-                    <p style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 1.5rem;">Haz clic en cualquier categoría para desplegar los voluntarios.</p>
-                    
-                    <div id="accordionContainer" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
-                </div> </div> </div>
-
-    </div> 
-
-
-
-<div id="songs-section" class="tab-content">
-            <div class="grid-people"> <div class="panel-window">
-                    <h3 id="songLibraryFormTitle">Registrar Canción en Biblioteca</h3>
-                    <form id="songLibraryForm">
-                        <div class="form-group">
-                            <label>TÍTULO DE LA CANCIÓN</label>
-                            <input type="text" id="libSongTitle" required placeholder="Ej: A Él, Hermoso Nombre">
-                        </div>
-                        <div class="form-group">
-                            <label>TONALIDAD BASE (KEY)</label>
-                            <input type="text" id="libSongKey" required placeholder="Ej: Bb, G, C#m">
-                        </div>
-                        <div class="form-group">
-                            <label>ARCHIVO DE AUDIO (MP3, WAV, M4A)</label>
-                            <input type="file" id="libSongAudio" accept="audio/*" style="padding: 0.5rem 0;">
-                            <span id="lblAudioStatus" style="font-size:0.7rem; color:var(--text-muted); display:block; margin-top:-0.25rem;"></span>
-                        </div>
-                        <div class="form-group">
-                            <label>CIFRADO / ACORDES (.PDF)</label>
-                            <input type="file" id="libSongPdf" accept="application/pdf" style="padding: 0.5rem 0;">
-                            <span id="lblPdfStatus" style="font-size:0.7rem; color:var(--text-muted); display:block; margin-top:-0.25rem;"></span>
-                        </div>
-                        <button type="submit" id="btnSubmitLibrarySong" class="btn-submit">Guardar en Biblioteca</button>
-                    </form>
-                </div>
+                            <div class="section-divider">PROCESO ESPIRITUAL</div>
+                            <div class="form-row" style="margin-bottom: 0.75rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                <label class="checkbox-group" for="isBaptized">
+                                    <input type="checkbox" id="isBaptized">
+                                    <span>¿Ya se bautizó?</span>
+                                </label>
+                                <label class="checkbox-group" for="inFriendshipGroup">
+                                    <input type="checkbox" id="inFriendshipGroup">
+                                    <span>¿Grupo de Amistad?</span>
+                                </label>
+                            </div>
+                            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                <label class="checkbox-group" for="hasADL">
+                                    <input type="checkbox" id="hasADL">
+                                    <span>ADL</span>
+                                </label>
+                                <label class="checkbox-group" for="hasEncounter">
+                                    <input type="checkbox" id="hasEncounter">
+                                    <span>Encuentro</span>
+                                </label>
+                            </div>
+                            <button type="submit" class="btn-submit">Guardar Miembro</button>
+                        </form>
+                    </div>
 
                 <div class="panel-window">
-                    <h3>Directorio de Canciones</h3>
-                    <div class="form-group" style="margin-bottom: 1.5rem;">
-                        <input type="text" id="searchLibraryInput" placeholder="🔍 Buscar canción por título o tono..." style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
-                    </div>
-                    
-                    <div class="table-responsive">
-                        <table class="people-table">
-                            <thead>
-                                <tr>
-                                    <th>Canción</th>
-                                    <th>Tono</th>
-                                    <th>Recursos</th>
-                                    <th style="text-align: right;">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="librarySongsListContainer">
-                                </tbody>
-                        </table>
-                    </div>
-                </div>
+                        <h3>Directorio General de la Iglesia</h3>
+                        <p style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 1.5rem;">Haz clic en cualquier categoría para desplegar los voluntarios.</p>
+                        
+                        <div id="accordionContainer" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
+                    </div> </div> </div>
 
+        
+
+  <div id="teams-directory" class="subtab-content">
+
+    <div style="display:grid; grid-template-columns:320px 1fr; gap:2rem;">
+
+        <!-- PANEL IZQUIERDO -->
+        <div class="panel-window">
+
+            <h3>Voluntarios Disponibles</h3>
+
+            <p style="color:var(--text-muted); font-size:.75rem; margin-bottom:1rem;">
+                Arrastra voluntarios hacia cualquier Team.
+            </p>
+
+            <div id="availableVolunteers"
+                 style="display:flex;
+                        flex-direction:column;
+                        gap:.75rem;
+                        min-height:300px;">
             </div>
+
         </div>
 
+        <!-- PANEL DERECHO -->
+        <div style="display:flex; flex-direction:column; gap:1.5rem;">
+
+            <div class="panel-window">
+
+                <h3>Crear Team</h3>
+
+                <form id="teamForm">
+
+                    <div class="form-group">
+                        <label>Nombre del Team</label>
+
+                        <input
+                            type="text"
+                            id="teamName"
+                            placeholder="Ej: Team Domingo AM">
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn-submit">
+                        Crear Team
+                    </button>
+
+                </form>
+
+            </div>
+
+            <div id="teamsContainer"
+                 style="display:grid;
+                        grid-template-columns:repeat(auto-fill,minmax(350px,1fr));
+                        gap:1.5rem;">
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</div>
+
+    <div id="songs-section" class="tab-content">
+    <div class="grid-people"> 
+        <div class="panel-window">
+            <h3 id="songLibraryFormTitle">Registrar Canción en Biblioteca</h3>
+            <form id="songLibraryForm">
+                <div class="form-group">
+                    <label>TÍTULO DE LA CANCIÓN</label>
+                    <input type="text" id="libSongTitle" required placeholder="Ej: Hermoso Nombre">
+                </div>
+                <div class="form-group">
+                    <label>TONALIDAD BASE</label>
+                    <input type="text" id="libSongKey" required placeholder="Ej: Bb">
+                </div>
+                
+                <div class="form-group">
+                    <label>SUBIR CARPETA DE STEMS</label>
+                    <input type="file" id="libSongStems" webkitdirectory directory multiple accept="audio/*" style="padding: 0.5rem 0;">
+                    <span style="font-size:0.7rem; color:var(--text-muted);">Selecciona la carpeta completa de la canción.</span>
+                </div>
+
+                <div id="stemsPreviewList" style="margin-bottom: 1rem; font-size: 0.75rem; color: var(--text-muted);"></div>
+
+                <button type="submit" id="btnSubmitLibrarySong" class="btn-submit">Subir Pistas y Guardar</button>
+            </form>
+        </div>
+
+        <div class="panel-window">
+            <h3>Directorio de Canciones</h3>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <input type="text" id="searchLibraryInput" placeholder="🔍 Buscar canción por nombre..." style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+            </div>
+            
+            <div class="table-responsive">
+                <table class="people-table">
+                    <thead>
+                        <tr>
+                            <th>Canción</th>
+                            <th>Tono</th>
+                            <th>Recursos</th>
+                            <th style="text-align: right;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="librarySongsListContainer">
+                    </tbody>
+                </table>
+            </div>
+
+           <div id="stemsPlayerContainer" style="display:none; background: #12141d; padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-window); margin-top: 2rem;">
+    <h4 id="playingSongTitle" style="margin-bottom: 1.5rem; color: #fff;">Reproduciendo: ...</h4>
+    
+    <div id="slidersContainer" style="display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: flex-start; align-items: flex-end;">
+        </div>
+
+    <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+    <button id="btnPlayFinal" class="btn-submit" style="width: auto;">Play</button>
+<button id="btnStopFinal" class="btn-submit" style="width: auto; background: var(--error);">Stop</button>
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="inventory-section" class="tab-content">
+
+        <div class="grid-people">
+
+            <!-- FORMULARIO -->
+            <div class="panel-window">
+
+                <h3>Registrar Equipo</h3>
+
+                <form id="inventoryForm">
+
+                    <div class="form-group">
+                        <label>NOMBRE DEL EQUIPO</label>
+                        <input type="text"
+                            id="itemName"
+                            placeholder="Ej: Shure SM58">
+                    </div>
+
+                    <div class="form-group">
+                        <label>CATEGORÍA</label>
+                        <select id="itemCategory">
+                            <option>Micrófonos</option>
+                            <option>Instrumentos</option>
+                            <option>Cables</option>
+                            <option>Consolas</option>
+                            <option>Monitores</option>
+                            <option>In-Ears</option>
+                            <option>Luces</option>
+                            <option>Video</option>
+                            <option>Synths</option>
+                            <option>Otros</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>MARCA</label>
+                        <input type="text"
+                            id="itemBrand"
+                            placeholder="Ej: Shure">
+                    </div>
+
+                    <div class="form-group">
+                        <label>MODELO</label>
+                        <input type="text"
+                            id="itemModel"
+                            placeholder="Ej: SM58">
+                    </div>
+
+                    <div class="form-group">
+                        <label>CANTIDAD</label>
+                        <input type="number"
+                            id="itemQuantity"
+                            value="1"
+                            min="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label>ESTADO</label>
+                        <select id="itemStatus">
+                            <option>Excelente</option>
+                            <option>Bueno</option>
+                            <option>Regular</option>
+                            <option>Reparación</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        GUARDAR EQUIPO
+                    </button>
+                </form>
+            </div>
+
+            <!-- LISTADO -->
+            <div class="panel-window">
+    <h3>Inventario General</h3>
+    <div class="table-responsive">
+                    <table class="people-table">
+                        <thead>
+                            <tr>
+                                <th>Equipo</th>
+                                <th>Categoría</th>
+                                <th>Cantidad</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryContainer"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
     <div id="toastNotification">
@@ -692,43 +911,121 @@
     </div>
 
     <script type="module">
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
-        import { auth, db } from "./firebase-config.js";
-        import { getAuth, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { collection, getDocs, addDoc, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
-        // 🌟 INICIALIZAR SERVICIOS
-        const storage = getStorage(); 
-        const authInstance = getAuth();
-        
-        let selectedServiceId = null;
-        let listaVoluntariosGlobal = [];
-        let resolucionConfirmacion = null;
-        let editPersonId = null;
-        
-        const servicesContainer = document.getElementById('servicesContainer');
-        const orderWindow = document.getElementById('orderWindow');
-        const orderTitle = document.getElementById('orderTitle');
-        const planItemsContainer = document.getElementById('planItemsContainer');
-        const peopleContainer = document.getElementById('peopleContainer');
-        const personForm = document.getElementById('personForm');
-        const submitPersonBtn = personForm.querySelector('.btn-submit');
-        const toastNotification = document.getElementById('toastNotification');
-        const confirmModal = document.getElementById('confirmModal');
-        const confirmModalBox = document.getElementById('confirmModalBox');
+import { auth, db } from "./firebase-config.js";
 
-        window.switchTab = function(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            
-            const target = document.getElementById(tabId);
-            if(target) target.classList.add('active');
-            
-            // Evalúa de forma exacta cuál botón encender basándose en la sección abierta
-            if(tabId === 'services-section') document.getElementById('btn-services').classList.add('active');
-            if(tabId === 'people-section') document.getElementById('btn-people').classList.add('active');
-            if(tabId === 'songs-section') document.getElementById('btn-songs').classList.add('active'); // 🌟 Enciende tu pestaña Canciones
-        }
+import "./auth-guard.js";
+
+import {
+    getAuth,
+    signOut,
+    createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+import {
+    collection,
+    getDocs,
+    addDoc,
+    query,
+    orderBy,
+    onSnapshot,
+    doc,
+    updateDoc,
+    arrayUnion,
+    getDoc,
+    setDoc,
+    deleteDoc,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+// 🔐 VALIDAR ADMIN
+initAuthGuard(["admin"]);
+
+// 🌟 INICIALIZAR SERVICIOS
+const storage = getStorage();
+const authInstance = getAuth();
+
+let selectedServiceId = null;
+let listaVoluntariosGlobal = [];
+let resolucionConfirmacion = null;
+let editPersonId = null;
+
+const servicesContainer = document.getElementById('servicesContainer');
+const orderWindow = document.getElementById('orderWindow');
+const orderTitle = document.getElementById('orderTitle');
+const planItemsContainer = document.getElementById('planItemsContainer');
+const peopleContainer = document.getElementById('peopleContainer');
+const personForm = document.getElementById('personForm');
+const submitPersonBtn = personForm.querySelector('.btn-submit');
+const toastNotification = document.getElementById('toastNotification');
+const confirmModal = document.getElementById('confirmModal');
+const confirmModalBox = document.getElementById('confirmModalBox');
+
+       // Borra todas las versiones anteriores de window.switchTab y pon solo esta:
+window.switchTab = function(tabId) {
+
+    window.audioElements = [];
+
+    window.iniciarPlay = function() {
+        window.audioElements.forEach(a => a.play().catch(e => console.error("Error al sonar:", e)));
+    };
+
+    window.detenerPlay = function() {
+        window.audioElements.forEach(a => { a.pause(); a.currentTime = 0; });
+    };
+
+    // Solo pestañas principales
+    document.querySelectorAll('.tab-content')
+        .forEach(el => el.classList.remove('active'));
+
+    document.querySelectorAll('.tab-btn')
+        .forEach(el => el.classList.remove('active'));
+
+    document.getElementById(tabId)?.classList.add('active');
+
+    const btn = document.getElementById(
+        'btn-' + tabId.replace('-section', '')
+    );
+
+    btn?.classList.add('active');
+
+    // Restaurar subtabs de VOLUNTARIOS
+    if(tabId === 'people-section') {
+
+        document.querySelectorAll(
+            '#people-section .subtab-content'
+        ).forEach(el => el.classList.remove('active'));
+
+        document.querySelectorAll(
+            '#people-section .subtab-btn'
+        ).forEach(el => el.classList.remove('active'));
+
+        document.getElementById('people-directory')
+            .classList.add('active');
+
+        document.getElementById('btn-people-directory')
+            .classList.add('active');
+    }
+
+    // Restaurar subtabs de GENERAL
+    if(tabId === 'services-section') {
+
+        document.querySelectorAll(
+            '#services-section .subtab-content'
+        ).forEach(el => el.classList.remove('active'));
+
+        document.querySelectorAll(
+            '#services-section .subtab-btn'
+        ).forEach(el => el.classList.remove('active'));
+
+        document.getElementById('subtab-escaleta')
+            .classList.add('active');
+
+        document.getElementById('subbtn-escaleta')
+            .classList.add('active');
+    }
+};
 
         // 🌟 NUEVO INTERRUPTOR DE SUBPESTAÑAS DE CONTROL INTERNO
         window.switchSubTab = function(subTabId) {
@@ -742,21 +1039,7 @@
             if(subTabId === 'subtab-bosquejo') document.getElementById('subbtn-bosquejo').classList.add('active');
         }
 
-        // 🌟 CONTROLADOR FLUIDO DE PESTAÑAS PRINCIPALES (SOPORTE PARA CANCIONES)
-        window.switchTab = function(tabId) {
-            // Ocultar todos los bloques de contenido principales y remover clases activas de botones
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            
-            // Mostrar la sección seleccionada
-            const targetSection = document.getElementById(tabId);
-            if(targetSection) targetSection.classList.add('active');
-            
-            // Mapear y encender el botón visual correspondiente de la barra superior
-            if(tabId === 'services-section') document.getElementById('btn-services').classList.add('active');
-            if(tabId === 'people-section') document.getElementById('btn-people').classList.add('active');
-            if(tabId === 'songs-section') document.getElementById('btn-songs').classList.add('active'); // 🌟 Tu nueva pestaña limpia
-        }
+    
 
         function mostrarToast(mensaje, tipo = 'success') {
             const toastText = document.getElementById('toastText');
@@ -1104,20 +1387,30 @@ if (serviceSketch) {
                 servicesContainer.appendChild(item);
 
                 if (id === selectedServiceId) {
+                    // 1. Asegurar visibilidad del panel de gestión
+                    const orderWindow = document.getElementById('orderWindow');
+                    if (orderWindow) orderWindow.style.display = 'block';
+
+                    // 2. Actualizar título y datos
                     orderTitle.innerText = `Gestión: ${service.title}`;
+                    
+                    // 3. Ejecutar actualización pasando los datos actuales del servicio
                     actualizarDatosSuiteGestion(service);
 
-                    // Ocultar Crear Servicio en persistencia de snapshot activo
+                    // 4. Ocultar Crear Servicio en persistencia de snapshot activo
                     const colCrearForm = document.getElementById('col-crear-servicio');
                     if(colCrearForm) colCrearForm.style.display = 'none';
 
-                    // Sincronización de seguridad para el Bosquejo
+                    // 5. Sincronización de seguridad para el Bosquejo
                     const cajaSketchRealTime = document.getElementById('serviceSketch');
                     if (cajaSketchRealTime) {
-                        if (service.sketch) {
-                            cajaSketchRealTime.innerHTML = service.sketch;
-                        } else {
-                            cajaSketchRealTime.innerHTML = `<span style="color:var(--text-muted); font-style:italic;">El pastor no ha redactado directrices ni bosquejos para este día aún.</span>`;
+                        // Solo actualizar si NO estamos en modo edición
+                        if (cajaSketchRealTime.getAttribute('contenteditable') === 'false') {
+                            if (service.sketch && service.sketch.trim() !== "") {
+                                cajaSketchRealTime.innerHTML = service.sketch;
+                            } else {
+                                cajaSketchRealTime.innerHTML = `<span style="color:var(--text-muted); font-style:italic;">El pastor no ha redactado directrices ni bosquejos para este día aún.</span>`;
+                            }
                         }
                     }
                 }
@@ -1254,19 +1547,20 @@ if (btnModoEdicion && btnGuardarCambios && cajaSketch) {
         }
 
 
-        // ==================== REGISTRO DE VOLUNTARIOS CON CONTRASEÑA MAESTRA ====================
+      // ==========================================================================
+        // 👥 REGISTRO DE VOLUNTARIOS (SOLUCIÓN INFALIBLE EN CADENA)
+        // ==========================================================================
         personForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const emailInput = document.getElementById('personEmail');
-            
             if (!emailInput) {
-                alert("Error de desarrollo: No se encontró el input con el ID 'personEmail' en el HTML. Por favor agrégalo.");
+                alert("Error de desarrollo: No se encontró el input con el ID 'personEmail'.");
                 return;
             }
 
             const emailValue = emailInput.value.trim().toLowerCase();
-            const passwordMaestra = "Iglesia2026"; // 🔑 Contraseña maestra global de acceso
+            const passwordMaestra = "Admin2020"; // 👑 Contraseña por defecto sincronizada
 
             const personData = {
                 fullName: document.getElementById('fullName').value,
@@ -1276,11 +1570,8 @@ if (btnModoEdicion && btnGuardarCambios && cajaSketch) {
                 email: emailValue,
                 serviceArea: document.getElementById('serviceArea').value,
                 mentorLeader: document.getElementById('mentorLeader').value || 'Sin asignar',
-                isAreaLeader: document.getElementById('isAreaLeader').checked, // 👑 Determina estatus de encargado
-                
-                // 🎸 AQUÍ ESTÁ LA LÍNEA QUE FALTABA: Guarda el instrumento si es de Alabanza, si no lo deja vacío
+                isAreaLeader: document.getElementById('isAreaLeader').checked,
                 instrument: document.getElementById('serviceArea').value === 'Alabanza' ? document.getElementById('worshipInstrument').value : '',
-                
                 isBaptized: document.getElementById('isBaptized').checked,
                 inFriendshipGroup: document.getElementById('inFriendshipGroup').checked,
                 hasADL: document.getElementById('hasADL').checked,             
@@ -1290,7 +1581,7 @@ if (btnModoEdicion && btnGuardarCambios && cajaSketch) {
 
             try {
                 if (editPersonId) {
-                    // Modo Edición: Actualiza únicamente los datos de la ficha técnica en 'people'
+                    // MODO EDICIÓN: Actualiza la ficha técnica en Firestore
                     await updateDoc(doc(db, "people", editPersonId), personData);
                     editPersonId = null;
                     submitPersonBtn.innerText = "Guardar Miembro";
@@ -1298,32 +1589,49 @@ if (btnModoEdicion && btnGuardarCambios && cajaSketch) {
                     submitPersonBtn.style.color = "#050508";
                     mostrarToast("Perfil de voluntario actualizado");
                 } else {
-                    // Modo Creación: 1. Guarda los datos en la colección 'people'
-                    personData.created_at = new Date().toISOString();
-                    await addDoc(collection(db, "people"), personData);
-
-                    // 2. Crea de forma automática las credenciales en Firebase Auth
+                    // MODO CREACIÓN AUTOMATIZADA EN CADENA
                     try {
-                        const credencialesUsuario = await createUserWithEmailAndPassword(auth, emailValue, passwordMaestra);
+                        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js");
+                        const { getAuth, createUserWithEmailAndPassword, signOut: secondarySignOut } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js");
+                        
+                        const appConfig = auth.app.options;
+                        const secondaryApp = initializeApp(appConfig, "SecondaryAuthApp");
+                        const secondaryAuth = getAuth(secondaryApp);
+
+                        // 1. Registrar credenciales en Firebase Auth aislado
+                        const credencialesUsuario = await createUserWithEmailAndPassword( secondaryAuth,emailValue, "Admin2020");
                         const uidGenerado = credencialesUsuario.user.uid;
 
-                        // 🌟 3. DETERMINACIÓN INTELIGENTE DE ROL: 
-                        // Si se registra como "Pastor", hereda acceso de pastor, de lo contrario es un voluntario estándar.
-                        const rolDeAcceso = personData.serviceArea === 'Pastor' ? 'pastor' : 'volunteer';
+                        // Cerrar sesión en la app secundaria inmediatamente
+                        await secondarySignOut(secondaryAuth);
 
+                        // 2. CREAR PRIMERO EL DOCUMENTO EN LA COLECCIÓN "USERS" (Crucial para el escudo)
+                        const rolDeAcceso = personData.serviceArea === 'Pastor' ? 'pastor' : 'volunteer';
                         await setDoc(doc(db, "users", uidGenerado), {
                             correo: emailValue,
                             rol: rolDeAcceso 
                         });
+                        console.log("✓ Documento creado con éxito en colección 'users'");
 
-                        mostrarToast(`¡Usuario listo! Registrado con acceso de [${rolDeAcceso.toUpperCase()}]`);
+                        // 3. CREAR EL DOCUMENTO EN LA COLECCIÓN "PEOPLE"
+                        personData.created_at = new Date().toISOString();
+                        await setDoc(doc(db, "people", uidGenerado), personData);
+                        console.log("✓ Documento creado con éxito en colección 'people'");
+
+                        mostrarToast(`¡Voluntario creado con éxito! Contraseña: ${passwordMaestra}`);
                     } catch (authErr) {
-                        console.warn("La ficha técnica fue creada con éxito, pero la cuenta de correo ya existía en Firebase Auth:", authErr.message);
-                        mostrarToast("Ficha guardada (El correo ya tiene un usuario de acceso previo)");
+                        if (authErr.code === 'auth/email-already-in-use') {
+                            // Si el correo ya existía en Auth, guardamos una ficha en people usando un ID aleatorio
+                            personData.created_at = new Date().toISOString();
+                            await addDoc(collection(db, "people"), personData);
+                            mostrarToast("Ficha guardada (El correo ya tiene un usuario previo)");
+                        } else {
+                            throw authErr;
+                        }
                     }
                 }
 
-                // --- CIERRE Y LIMPIEZA DEL FORMULARIO ---
+                // --- LIMPIEZA COMPLETA DEL FORMULARIO ---
                 personForm.reset();
                 editPersonId = null;
                 
@@ -1337,12 +1645,10 @@ if (btnModoEdicion && btnGuardarCambios && cajaSketch) {
                 document.getElementById('hasADL').checked = false;
                 document.getElementById('hasEncounter').checked = false;
                 
-                // Limpia el selector de instrumentos
                 if (document.getElementById('worshipInstrument')) {
                     document.getElementById('worshipInstrument').value = "";
                 }
                 
-                // Dispara el evento change para actualizar la vista dinámica del formulario
                 document.getElementById('serviceArea').dispatchEvent(new Event('change'));
 
             } catch (err) { 
@@ -1352,59 +1658,153 @@ if (btnModoEdicion && btnGuardarCambios && cajaSketch) {
         });
 
 
-       // ==================== REAL-TIME DIRECTORIO GENERAL CON LOGÍSTICA DE ENCARGADOS ====================
-        onSnapshot(query(collection(db, "people"), orderBy("fullName", "asc")), (snapshot) => {
-            let accordionContainer = document.getElementById('accordionContainer');
-            if (!accordionContainer) {
-                const panelDirectorio = document.querySelector('.grid-people .panel-window:last-child') || document.querySelector('.panel-window:last-child');
-                if (panelDirectorio) {
-                    accordionContainer = document.createElement('div');
-                    accordionContainer.id = 'accordionContainer';
-                    accordionContainer.style.cssText = "display: flex; flex-direction: column; gap: 0.75rem; width: 100%;";
-                    panelDirectorio.appendChild(accordionContainer);
-                } else {
-                    return; 
-                }
-            }
+       onSnapshot(
+    query(
+        collection(db, "people"),
+        orderBy("fullName", "asc")
+    ),
+    (snapshot) => {
 
-            accordionContainer.innerHTML = "";
+        let accordionContainer =
+            document.getElementById("accordionContainer");
 
-            if (snapshot.empty) {
-                accordionContainer.innerHTML = `<div style="color: var(--text-muted); text-align: center; padding: 2rem; background: rgba(255,255,255,0.01); border-radius:12px; border: 1px solid rgba(255,255,255,0.02);">No hay miembros registrados.</div>`;
+        if (!accordionContainer) {
+
+            const panelDirectorio =
+                document.querySelector(
+                    ".grid-people .panel-window:last-child"
+                ) ||
+                document.querySelector(
+                    ".panel-window:last-child"
+                );
+
+            if (panelDirectorio) {
+
+                accordionContainer =
+                    document.createElement("div");
+
+                accordionContainer.id =
+                    "accordionContainer";
+
+                accordionContainer.style.cssText =
+                    "display:flex;flex-direction:column;gap:.75rem;width:100%;";
+
+                panelDirectorio.appendChild(
+                    accordionContainer
+                );
+
+            } else {
+
                 return;
+
             }
 
-            const currentUserRole = localStorage.getItem('userRole') || '';
-            if (currentUserRole !== 'admin' && currentUserRole !== 'pastor' && currentUserRole !== 'volunteer' && currentUserRole !== 'voluntario') {
-                accordionContainer.innerHTML = `<div style="color: var(--text-muted); text-align: center; padding: 2rem; background: rgba(255,255,255,0.01); border-radius:12px; border: 1px solid rgba(255,255,255,0.02);">No tienes permisos para ver esta lista.</div>`;
-                return;
+        }
+
+        accordionContainer.innerHTML = "";
+
+        if (snapshot.empty) {
+
+            accordionContainer.innerHTML = `
+                <div style="
+                    color:var(--text-muted);
+                    text-align:center;
+                    padding:2rem;
+                    background:rgba(255,255,255,.01);
+                    border-radius:12px;
+                    border:1px solid rgba(255,255,255,.02);
+                ">
+                    No hay miembros registrados.
+                </div>
+            `;
+
+            return;
+        }
+
+        // 🔥 MÁS ROBUSTO
+        const currentUserRole = (
+            window.currentUserData?.rol ||
+            window.currentUserData?.role ||
+            localStorage.getItem("userRole") ||
+            ""
+        )
+        .toString()
+        .trim()
+        .toLowerCase();
+
+        console.log(
+            "ROL DETECTADO:",
+            currentUserRole
+        );
+
+        const rolesPermitidos = [
+            "admin",
+            "pastor",
+            "volunteer",
+            "voluntario"
+        ];
+
+        if (!rolesPermitidos.includes(currentUserRole)) {
+
+            accordionContainer.innerHTML = `
+                <div style="
+                    color:var(--text-muted);
+                    text-align:center;
+                    padding:2rem;
+                    background:rgba(255,255,255,.01);
+                    border-radius:12px;
+                    border:1px solid rgba(255,255,255,.02);
+                ">
+                    No tienes permisos para ver esta lista.
+                </div>
+            `;
+
+            return;
+        }
+
+        const grupos = {
+            Pastor: [],
+            Alabanza: [],
+            Multimedia: [],
+            Audio: [],
+            "Logística": [],
+            Tv: [],
+            "Niños": [],
+            Miembro: [],
+            "Líderes": []
+        };
+
+        snapshot.forEach((docSnap) => {
+
+            const person = docSnap.data();
+            const id = docSnap.id;
+
+            const area =
+                person.serviceArea?.trim() ||
+                "Miembro";
+
+            if (grupos[area]) {
+
+                grupos[area].push({
+                    id,
+                    ...person
+                });
+
+            } else {
+
+                grupos["Líderes"].push({
+                    id,
+                    ...person
+                });
+
             }
 
-            // Estructura limpia de grupos base
-            const grupos = {
-                "Pastor": [],
-                "Alabanza": [],
-                "Multimedia": [],
-                "Audio": [],
-                "Logística": [],
-                "Tv": [],
-                "Niños": [],
-                "Miembro": []
-            };
+        });
 
-            snapshot.forEach((docSnap) => {
-    const person = docSnap.data();
-    const id = docSnap.id;
-    const area = person.serviceArea || "Miembro";
-    
-    if (grupos[area]) {
-        grupos[area].push({ id, ...person });
-    } else {
-        // En lugar de "Otros", cualquier área extraña o vacía se agrupa estéticamente en "Líderes"
-        if (!grupos["Líderes"]) grupos["Líderes"] = [];
-        grupos["Líderes"].push({ id, ...person });
-    }
-});
+        console.log(
+            "Personas encontradas:",
+            snapshot.size
+        );
 
 
 // ✕ ACCIÓN: CERRAR PANEL DE GESTIÓN Y MOSTRAR "CREAR SERVICIO" NUEVAMENTE
@@ -1672,32 +2072,76 @@ if (btnModoEdicion && btnGuardarCambios && cajaSketch) {
         const btnSaveTeam = document.getElementById('btnSaveTeam');
 
 
-        async function cargarVoluntariosDisponibles() {
-            try {
-                // Buscamos en tu colección 'people'
-                const querySnapshot = await getDocs(collection(db, "people"));
-                listaVoluntariosGlobal = [];
-                
-                querySnapshot.forEach((docSnap) => {
-                    const datos = docSnap.data();
-                    if (datos.fullName) {
-                        listaVoluntariosGlobal.push({
-                            id: docSnap.id,
-                            nombre: datos.fullName,
-                            area: datos.serviceArea || "General"
-                        });
-                    }
+     // 1. Carga los datos de Firestore a la variable global
+async function cargarVoluntariosDisponibles() {
+    try {
+        const querySnapshot = await getDocs(collection(db, "people"));
+        listaVoluntariosGlobal = [];
+        
+        querySnapshot.forEach((docSnap) => {
+            const datos = docSnap.data();
+            if (datos.fullName) {
+                listaVoluntariosGlobal.push({
+                    id: docSnap.id,
+                    nombre: datos.fullName,
+                    area: datos.serviceArea || "General",
+                    instrument: datos.instrument || ""
                 });
-
-                // Ordenar alfabéticamente por nombre
-                listaVoluntariosGlobal.sort((a, b) => a.nombre.localeCompare(b.nombre));
-                console.log("Voluntarios cargados para asignación:", listaVoluntariosGlobal.length);
-            } catch (error) {
-                console.error("Error al cargar lista de voluntarios:", error);
             }
-        }
+        });
 
+        listaVoluntariosGlobal.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        
+        // Llamamos a la función que pinta las tarjetas
+        renderVoluntariosDisponibles();
 
+    } catch (error) {
+        console.error("Error al cargar lista de voluntarios:", error);
+    }
+}
+
+// 2. Esta función pinta las tarjetas y añade los eventos de arrastre
+async function renderVoluntariosDisponibles() {
+    const contenedor = document.getElementById("availableVolunteers");
+    if (!contenedor) return;
+
+    // Filtramos los que ya están en algún equipo
+    const asignados = new Set();
+    todosLosTeams.forEach(team => {
+        (team.members || []).forEach(m => asignados.add(m.id));
+    });
+
+    contenedor.innerHTML = "";
+
+    listaVoluntariosGlobal.forEach(vol => {
+        if (asignados.has(vol.id)) return;
+
+        contenedor.innerHTML += `
+            <div class="volunteer-card" 
+                 draggable="true" 
+                 data-person-id="${vol.id}"
+                 style="padding:12px; border-radius:12px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.05); cursor:grab; margin-bottom: 0.75rem;">
+                <div style="font-weight:600; color:white;">${vol.nombre}</div>
+                <div style="font-size:.75rem; color:var(--text-muted); margin-top:4px;">
+                    ${vol.instrument || vol.area}
+                </div>
+            </div>
+        `;
+    });
+
+    // 🌟 AÑADIMOS EVENTOS DE ARRASTRE A TODAS LAS TARJETAS CREADAS
+    document.querySelectorAll(".volunteer-card").forEach(card => {
+        card.addEventListener("dragstart", (e) => {
+            e.dataTransfer.setData("personId", card.dataset.personId);
+            card.style.opacity = "0.5";
+        });
+        card.addEventListener("dragend", () => {
+            card.style.opacity = "1";
+        });
+    });
+
+    console.log("Voluntarios cargados para asignación:", listaVoluntariosGlobal.length);
+}
        // ==========================================================================
         // 👥 MOTOR DE ROLES DINÁMICOS CON FILTRADO POR ÁREA Y FUNCIÓN ESPECÍFICA
         // ==========================================================================
@@ -1838,141 +2282,261 @@ if (btnModoEdicion && btnGuardarCambios && cajaSketch) {
         };
 
         // 🔐 ENRUTADOR INTELIGENTE DE ACCESOS Y DATOS EN TIEMPO REAL
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        try {
-            const userDoc = await getDoc(doc(db, "users", user.uid));
-            
-            // Si el usuario no tiene una cuenta configurada en Firestore, lo expulsamos
-            if (!userDoc.exists()) {
-                localStorage.removeItem('userRole');
-                signOut(auth);
-                window.location.href = '/index.html';
-                return;
+initAuthGuard(["admin"]);
+
+document.addEventListener("authReady", async (e) => {
+
+    const user = e.detail.user;
+
+    try {
+
+        const personDoc = await getDoc(doc(db, "people", user.uid));
+
+        const avatarContainer = document.getElementById('adminAvatarContainer');
+        const profileName = document.getElementById('adminProfileName');
+        const profileRole = document.getElementById('adminProfileRole');
+
+        const modalAvatarContainer = document.getElementById('modalAdminAvatarContainer');
+        const modalAdminName = document.getElementById('modalAdminName');
+        const modalAdminArea = document.getElementById('modalAdminArea');
+
+        const refrescarUIPerfil = (nombre, area, fotoUrl) => {
+
+            if (profileName) profileName.innerText = nombre;
+            if (modalAdminName) modalAdminName.innerText = nombre;
+
+            if (modalAdminArea) {
+                modalAdminArea.innerText = area || "Administrador Principal";
             }
 
-            const rolUsuario = userDoc.data().rol;
-
-            // 🔀 REDIRECCIÓN INTELIGENTE SEGÚN EL ROL GUARDADO
-            // Si el usuario es Pastor o Voluntario, lo mandamos a su página correspondiente de inmediato
-            if (rolUsuario === 'pastor') {
-                localStorage.setItem('userRole', 'pastor');
-                window.location.href = 'pastor.html'; // 🚀 Envía al Pastor a su suite de bosquejos
-                return;
-            } else if (rolUsuario === 'volunteer') {
-                localStorage.setItem('userRole', 'volunteer');
-                window.location.href = 'miembros.html'; // Envía a los servidores a su visor
-                return;
+            if (profileRole) {
+                profileRole.innerText = area || "Administrador";
             }
 
-            // 👑 SI LLEGÓ AQUÍ, SIGNIFICA QUE ES ADMIN. CONTINÚA CARGANDO EL PANEL:
-            localStorage.setItem('userRole', 'admin');
+            if (fotoUrl) {
 
-            // 🌟 VÍNCULO DIRECTO CON LA COLECCIÓN 'PEOPLE' VIA UID
-            const personDoc = await getDoc(doc(db, "people", user.uid));
-            const avatarContainer = document.getElementById('adminAvatarContainer');
-            const profileName = document.getElementById('adminProfileName');
-            const profileRole = document.getElementById('adminProfileRole');
+                const imagenHTML = `
+                    <img
+                        src="${fotoUrl}"
+                        alt="Avatar"
+                        style="
+                            width:100%;
+                            height:100%;
+                            object-fit:cover;
+                            border-radius:50%;
+                        "
+                    >
+                `;
 
-            // Selectores internos de la ventana modal flotante
-            const modalAvatarContainer = document.getElementById('modalAdminAvatarContainer');
-            const modalAdminName = document.getElementById('modalAdminName');
-            const modalAdminArea = document.getElementById('modalAdminArea');
+                if (avatarContainer) {
+                    avatarContainer.innerHTML = `
+                        <div
+                            style="
+                                width:28px;
+                                height:28px;
+                                border-radius:50%;
+                                overflow:hidden;
+                                border:1px solid rgba(255,255,255,0.1);
+                                display:flex;
+                                align-items:center;
+                                justify-content:center;
+                            "
+                        >
+                            ${imagenHTML}
+                        </div>
+                    `;
+                }
 
-            // Función interna para refrescar la navbar y la modal simultáneamente
-            const refrescarUIPerfil = (nombre, area, fotoUrl) => {
-                if (profileName) profileName.innerText = nombre;
-                if (modalAdminName) modalAdminName.innerText = nombre;
-                
-                // 🌟 LIMPIEZA DE TAGS: Quitamos las etiquetas "Director" por completo
-                if (modalAdminArea) modalAdminArea.innerText = area ? area : "Administrador Principal";
-                if (profileRole) profileRole.innerText = area ? area : "Administrador";
+                if (modalAvatarContainer) {
+                    modalAvatarContainer.innerHTML = imagenHTML;
+                }
 
-                if (fotoUrl) {
-                    const imagenHTML = `<img src="${fotoUrl}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-                    if (avatarContainer) avatarContainer.innerHTML = `<div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;">${imagenHTML}</div>`;
-                    if (modalAvatarContainer) modalAvatarContainer.innerHTML = imagenHTML;
-                } else {
-                    const inicial = nombre.charAt(0).toUpperCase();
-                    if (avatarContainer) avatarContainer.innerHTML = `<div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; font-size: 0.75rem;">${inicial}</div>`;
-                    if (modalAvatarContainer) modalAvatarContainer.innerHTML = inicial;
+            } else {
+
+                const inicial = nombre.charAt(0).toUpperCase();
+
+                if (avatarContainer) {
+                    avatarContainer.innerHTML = `
+                        <div
+                            style="
+                                width:28px;
+                                height:28px;
+                                border-radius:50%;
+                                background:rgba(255,255,255,0.05);
+                                border:1px solid rgba(255,255,255,0.05);
+                                display:flex;
+                                align-items:center;
+                                justify-content:center;
+                                font-weight:600;
+                                color:#fff;
+                                font-size:0.75rem;
+                            "
+                        >
+                            ${inicial}
+                        </div>
+                    `;
+                }
+
+                if (modalAvatarContainer) {
+                    modalAvatarContainer.innerHTML = inicial;
+                }
+            }
+        };
+
+        if (personDoc.exists()) {
+
+            const datosPersona = personDoc.data();
+
+            refrescarUIPerfil(
+                datosPersona.name || "Administrador",
+                datosPersona.area || "",
+                datosPersona.avatarUrl || null
+            );
+
+        } else {
+
+            refrescarUIPerfil(
+                user.displayName || "Administrador",
+                "",
+                null
+            );
+        }
+
+        const wrapperPerfil = avatarContainer?.parentElement;
+
+        if (wrapperPerfil) {
+
+            wrapperPerfil.style.cursor = "pointer";
+            wrapperPerfil.title = "Ver mi Perfil Completo";
+
+            wrapperPerfil.onclick = () => {
+
+                const modal =
+                    document.getElementById(
+                        "profileModalAdmin"
+                    );
+
+                if (modal) {
+
+                    modal.style.opacity = "1";
+                    modal.style.pointerEvents = "auto";
                 }
             };
+        }
 
-            // Renderizar datos iniciales si existen en Firestore
-            if (personDoc.exists()) {
-                const datosPersona = personDoc.data();
-                refrescarUIPerfil(datosPersona.name || "Administrador", datosPersona.area || "", datosPersona.avatarUrl || null);
-            } else {
-                refrescarUIPerfil(user.displayName || "Administrador", "", null);
-            }
+        const btnTrigger =
+            document.getElementById(
+                "btnTriggerAdminUpload"
+            );
 
-            // 🛠️ CONFIGURAR CLICK EN TU NOMBRE/FOTO PARA ABRIR EL MODAL FLOTANTE
-            const wrapperPerfil = avatarContainer?.parentElement;
-            if (wrapperPerfil) {
-                wrapperPerfil.style.cursor = 'pointer';
-                wrapperPerfil.title = "Ver mi Perfil Completo";
-                wrapperPerfil.onclick = () => {
-                    const modal = document.getElementById('profileModalAdmin');
-                    if (modal) {
-                        modal.style.opacity = '1';
-                        modal.style.pointerEvents = 'auto';
-                    }
-                };
-            }
+        const fileInput =
+            document.getElementById(
+                "modalAdminFileInput"
+            );
 
-            // 📸 MANEJADOR DE CARGA DE IMÁGENES A FIREBASE STORAGE
-            const btnTrigger = document.getElementById('btnTriggerAdminUpload');
-            const fileInput = document.getElementById('modalAdminFileInput');
+        if (btnTrigger && fileInput) {
 
-            if (btnTrigger && fileInput) {
-                btnTrigger.onclick = () => fileInput.click();
+            btnTrigger.onclick = () => fileInput.click();
 
-                fileInput.onchange = async (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
+            fileInput.onchange = async (e) => {
 
-                    mostrarToast("Subiendo imagen de perfil...", "info");
+                const file = e.target.files[0];
 
-                    try {
-                        const { ref: sRef, uploadBytes: sUpload, getDownloadURL: sGetURL } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js");
-                        
-                        const pathReferencia = sRef(storage, `profiles/${user.uid}_${file.name}`);
-                        await sUpload(pathReferencia, file);
-                        const urlFinalDescarga = await sGetURL(pathReferencia);
+                if (!file) return;
 
-                        // Guardar cambios en la colección centralizada de personas
-                        await setDoc(doc(db, "people", user.uid), {
-                            avatarUrl: urlFinalDescarga
-                        }, { merge: true });
+                mostrarToast(
+                    "Subiendo imagen de perfil...",
+                    "info"
+                );
 
-                        // Recuperar instantánea fresca y actualizar toda la interfaz
-                        const snapFresco = await getDoc(doc(db, "people", user.uid));
-                        if (snapFresco.exists()) {
-                            const d = snapFresco.data();
-                            refrescarUIPerfil(d.name || "Administrador", d.area || "", d.avatarUrl);
+                try {
+
+                    const {
+                        ref: sRef,
+                        uploadBytes: sUpload,
+                        getDownloadURL: sGetURL
+                    } = await import(
+                        "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js"
+                    );
+
+                    const pathReferencia =
+                        sRef(
+                            storage,
+                            `profiles/${user.uid}_${file.name}`
+                        );
+
+                    await sUpload(
+                        pathReferencia,
+                        file
+                    );
+
+                    const urlFinalDescarga =
+                        await sGetURL(
+                            pathReferencia
+                        );
+
+                    await setDoc(
+                        doc(
+                            db,
+                            "people",
+                            user.uid
+                        ),
+                        {
+                            avatarUrl:
+                                urlFinalDescarga
+                        },
+                        {
+                            merge: true
                         }
+                    );
 
-                        mostrarToast("Foto de perfil actualizada correctamente");
-                    } catch (err) {
-                        console.error("Error al subir archivo a Firebase Storage:", err);
-                        mostrarToast("Error al cargar la imagen", "delete");
+                    const snapFresco =
+                        await getDoc(
+                            doc(
+                                db,
+                                "people",
+                                user.uid
+                            )
+                        );
+
+                    if (snapFresco.exists()) {
+
+                        const d =
+                            snapFresco.data();
+
+                        refrescarUIPerfil(
+                            d.name || "Administrador",
+                            d.area || "",
+                            d.avatarUrl
+                        );
                     }
-                };
-            }
 
-            await cargarVoluntariosDisponibles();
-            inicializarPanel();
+                    mostrarToast(
+                        "Foto de perfil actualizada correctamente"
+                    );
 
-        } catch (error) {
-            console.error("Error cargando perfil dinámico o redirección:", error);
-            signOut(auth);
+                } catch (err) {
+
+                    console.error(err);
+
+                    mostrarToast(
+                        "Error al cargar la imagen",
+                        "delete"
+                    );
+                }
+            };
         }
-    } else {
-        // Si no hay un login activo o cierra sesión, lo mandamos a la raíz
-        if (window.location.pathname !== '/index.html' && !window.location.pathname.endsWith('index.html')) {
-            window.location.href = '/index.html';
-        }
+
+        await cargarVoluntariosDisponibles();
+
+        inicializarPanel();
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando perfil:",
+            error
+        );
     }
 });
 
@@ -2011,46 +2575,62 @@ onAuthStateChanged(auth, async (user) => {
                 if(!iconosRecursos) iconosRecursos = "Ninguno";
 
                 librarySongsListContainer.insertAdjacentHTML('beforeend', `
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.02);">
-                        <td><strong style="color:#fff;">${song.title}</strong></td>
-                        <td><span class="song-key">${song.key}</span></td>
-                        <td><span style="font-size:0.8rem;">${iconosRecursos}</span></td>
-                        <td style="text-align: right;">
-                            <div style="display: flex; gap: 0.4rem; justify-content: flex-end;">
-                                <button type="button" class="btn-edit-song" data-id="${id}" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); cursor: pointer; width: 30px; height: 30px; border-radius: 6px; display:flex; align-items:center; justify-content:center;">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                </button>
-                                <button type="button" class="btn-delete-song" data-id="${id}" style="background: rgba(248,113,113,0.05); border: 1px solid rgba(248,113,113,0.1); cursor: pointer; width: 30px; height: 30px; border-radius: 6px; display:flex; align-items:center; justify-content:center;">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `);
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.02);">
+        <td><strong style="color:#fff;">${song.title}</strong></td>
+        <td><span class="song-key">${song.key}</span></td>
+        <td><span style="font-size:0.8rem;">${iconosRecursos}</span></td>
+        <td style="text-align: right;">
+            <div style="display: flex; gap: 0.4rem; justify-content: flex-end;">
+                <button type="button" class="btn-play-song" onclick='reproducirCancion(${JSON.stringify(song)})' style="background: rgba(52, 211, 153, 0.05); border: 1px solid rgba(52, 211, 153, 0.1); cursor: pointer; width: 30px; height: 30px; border-radius: 6px; display:flex; align-items:center; justify-content:center;" title="Reproducir Stems">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                </button>
+
+                <button type="button" class="btn-edit-song" data-id="${id}" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); cursor: pointer; width: 30px; height: 30px; border-radius: 6px; display:flex; align-items:center; justify-content:center;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </button>
+                
+                <button type="button" class="btn-delete-song" data-id="${id}" style="background: rgba(248,113,113,0.05); border: 1px solid rgba(248,113,113,0.1); cursor: pointer; width: 30px; height: 30px; border-radius: 6px; display:flex; align-items:center; justify-content:center;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+        </td>
+    </tr>
+`);
             });
 
-            // Handlers para Editar Canción de la Biblioteca
-            librarySongsListContainer.querySelectorAll('.btn-edit-song').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const id = btn.getAttribute('data-id');
-                    const song = bibliotecaCancionesGlobal.find(s => s.id === id);
-                    if (!song) return;
+           // Handlers para Editar Canción de la Biblioteca (VERSION STEMS)
+librarySongsListContainer.querySelectorAll('.btn-edit-song').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        const song = bibliotecaCancionesGlobal.find(s => s.id === id);
+        if (!song) return;
 
-                    editLibrarySongId = id;
-                    document.getElementById('libSongTitle').value = song.title;
-                    document.getElementById('libSongKey').value = song.key;
-                    urlAudioExistente = song.audio || "";
-                    urlPdfExistente = song.pdf || "";
+        editLibrarySongId = id;
+        document.getElementById('libSongTitle').value = song.title;
+        document.getElementById('libSongKey').value = song.key;
 
-                    document.getElementById('lblAudioStatus').innerText = song.audio ? "✓ Contiene audio en nube" : "Sin audio previo";
-                    document.getElementById('lblPdfStatus').innerText = song.pdf ? "✓ Contiene PDF en nube" : "Sin PDF previo";
+        // 🌟 LÓGICA DE STEMS: Contamos cuántas pistas tiene la canción
+        const numeroStems = song.stems ? Object.keys(song.stems).length : 0;
+        const statusText = numeroStems > 0 
+            ? `✓ ${numeroStems} pistas cargadas en nube` 
+            : "Sin pistas registradas";
 
-                    document.getElementById('songLibraryFormTitle').innerText = "Editar Canción de Biblioteca";
-                    btnSubmitLibrarySong.innerText = "Actualizar Cambios ✓";
-                    btnSubmitLibrarySong.style.background = "rgba(52, 211, 153, 0.2)";
-                    btnSubmitLibrarySong.style.color = "var(--success)";
-                });
-            });
+        // Actualizamos el feedback visual para el usuario
+        const lblStatus = document.getElementById('lblAudioStatus');
+        if (lblStatus) {
+            lblStatus.innerText = statusText;
+            lblStatus.style.color = numeroStems > 0 ? "var(--success)" : "var(--text-muted)";
+        }
+
+        document.getElementById('songLibraryFormTitle').innerText = "Editar Canción de Biblioteca";
+        btnSubmitLibrarySong.innerText = "Actualizar Cambios ✓";
+        btnSubmitLibrarySong.style.background = "rgba(52, 211, 153, 0.2)";
+        btnSubmitLibrarySong.style.color = "var(--success)";
+        
+        // Hacer scroll al formulario para que el usuario sepa que está en modo edición
+        document.getElementById('songLibraryForm').scrollIntoView({ behavior: 'smooth' });
+    });
+});
 
             // Handlers para Eliminar Canción de la Biblioteca
             librarySongsListContainer.querySelectorAll('.btn-delete-song').forEach(btn => {
@@ -2079,60 +2659,74 @@ onAuthStateChanged(auth, async (user) => {
             });
         }
 
-        // 3. Procesar Formulario de Guardado/Edición en la Biblioteca Central
-        songLibraryForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            btnSubmitLibrarySong.disabled = true;
-            btnSubmitLibrarySong.innerText = "Subiendo binarios a Storage...";
+      // 3. Procesar Formulario de Guardado/Edición en la Biblioteca Central
+songLibraryForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const title = document.getElementById('libSongTitle').value.trim();
+    const key = document.getElementById('libSongKey').value.trim();
+    const inputFiles = document.getElementById('libSongStems').files;
 
-            const title = document.getElementById('libSongTitle').value.trim();
-            const key = document.getElementById('libSongKey').value.trim();
-            const fileAudio = document.getElementById('libSongAudio').files[0];
-            const filePdf = document.getElementById('libSongPdf').files[0];
+    if (inputFiles.length === 0) {
+        mostrarToast("No se detectaron archivos", "delete");
+        return;
+    }
 
-            try {
-                let audioUrl = editLibrarySongId ? urlAudioExistente : "";
-                let pdfUrl = editLibrarySongId ? urlPdfExistente : "";
+    btnSubmitLibrarySong.disabled = true;
+    const stemsPreviewList = document.getElementById('stemsPreviewList');
+    stemsPreviewList.innerHTML = ""; 
 
-                if(fileAudio) {
-                    const audioRef = ref(storage, `library_audios/${Date.now()}_${fileAudio.name}`);
-                    const snap = await uploadBytes(audioRef, fileAudio);
-                    audioUrl = await getDownloadURL(snap.ref);
-                }
-                if(filePdf) {
-                    const pdfRef = ref(storage, `library_pdfs/${Date.now()}_${filePdf.name}`);
-                    const snap = await uploadBytes(pdfRef, filePdf);
-                    pdfUrl = await getDownloadURL(snap.ref);
-                }
+    const folderName = title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
 
-                const payload = { title, key, audio: audioUrl, pdf: pdfUrl, updated_at: new Date().toISOString() };
-
-                if(editLibrarySongId) {
-                    await updateDoc(doc(db, "songs", editLibrarySongId), payload);
-                    mostrarToast("Canción de la biblioteca actualizada");
-                } else {
-                    payload.created_at = new Date().toISOString();
-                    await addDoc(collection(db, "songs"), payload);
-                    mostrarToast("Canción añadida a la biblioteca central");
-                }
-
-                // Resetear estado del formulario
-                songLibraryForm.reset();
-                editLibrarySongId = null;
-                document.getElementById('lblAudioStatus').innerText = "";
-                document.getElementById('lblPdfStatus').innerText = "";
-                document.getElementById('songLibraryFormTitle').innerText = "Registrar Canción en Biblioteca";
-                btnSubmitLibrarySong.innerText = "Guardar en Biblioteca";
-                btnSubmitLibrarySong.style.background = "var(--text-main)";
-                btnSubmitLibrarySong.style.color = "#050508";
-
-            } catch (err) {
-                console.error(err);
-                mostrarToast("Error al procesar la canción", "delete");
-            } finally {
-                btnSubmitLibrarySong.disabled = false;
-            }
+    try {
+        const stemsUrls = {};
+        
+        // 1. Filtrado basado 100% en extensión (ignora type que falla en carpetas)
+        const archivosPermitidos = ['.mp3', '.wav', '.m4a', '.aac', '.aiff'];
+        const audiosReales = Array.from(inputFiles).filter(file => {
+            const nameLower = file.name.toLowerCase();
+            const esAudio = archivosPermitidos.some(ext => nameLower.endsWith(ext));
+            const esBasura = nameLower.startsWith('.') || nameLower.startsWith('_');
+            return esAudio && !esBasura;
         });
+
+        if (audiosReales.length === 0) {
+            throw new Error("No se encontraron archivos de audio válidos.");
+        }
+
+        let contadorReal = 0;
+
+        // 2. Subida filtrada
+        for (let file of audiosReales) {
+            contadorReal++;
+            btnSubmitLibrarySong.innerText = `Subiendo ${contadorReal} de ${audiosReales.length}...`;
+            
+            const storageRef = ref(storage, `songs/${folderName}/${file.name}`);
+            const snapshot = await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(snapshot.ref);
+            
+            const trackName = file.name.split('.')[0].toLowerCase();
+            stemsUrls[trackName] = url;
+
+            stemsPreviewList.innerHTML += `<div style="margin-bottom: 2px;">✅ ${file.name}</div>`;
+        }
+
+        await addDoc(collection(db, "songs"), { 
+            title, key, stems: stemsUrls, created_at: new Date().toISOString() 
+        });
+        
+        mostrarToast("Canción subida correctamente");
+        songLibraryForm.reset();
+        setTimeout(() => { stemsPreviewList.innerHTML = ""; }, 5000);
+
+    } catch (err) {
+        console.error(err);
+        mostrarToast("Error: " + err.message, "delete");
+    } finally {
+        btnSubmitLibrarySong.disabled = false;
+        btnSubmitLibrarySong.innerText = "Subir Pistas y Guardar";
+    }
+});
 
 
         // ==========================================================================
@@ -2200,7 +2794,521 @@ onAuthStateChanged(auth, async (user) => {
             });
         }
 
+
+        document.getElementById("inventoryForm")
+.addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    try {
+
+        await addDoc(collection(db, "inventory"), {
+
+            nombre: document.getElementById("itemName").value,
+            categoria: document.getElementById("itemCategory").value,
+            marca: document.getElementById("itemBrand").value,
+            modelo: document.getElementById("itemModel").value,
+            cantidad: Number(document.getElementById("itemQuantity").value),
+            estado: document.getElementById("itemStatus").value,
+            createdAt: new Date()
+
+        });
+
+        mostrarToast("Equipo agregado al inventario");
+
+        document.getElementById("inventoryForm").reset();
+
+    } catch (error) {
+
+        console.error(error);
+
+        mostrarToast("Error guardando equipo", "delete");
+
+    }
+
+});
+
+
+const inventoryContainer =
+    document.getElementById("inventoryContainer");
+
+onSnapshot(
+    query(collection(db, "inventory")),
+    (snapshot) => {
+
+        inventoryContainer.innerHTML = "";
+
+        snapshot.forEach((docSnap) => {
+
+            const item = docSnap.data();
+
+            inventoryContainer.innerHTML += `
+                <tr>
+                    <td>${item.nombre || ""}</td>
+                    <td>${item.categoria || ""}</td>
+                    <td>${item.cantidad || 0}</td>
+                    <td>${item.estado || ""}</td>
+                    <td>
+                        <button
+                            onclick="eliminarEquipo('${docSnap.id}')"
+                            style="
+                                background:#ef4444;
+                                color:white;
+                                border:none;
+                                padding:6px 10px;
+                                border-radius:8px;
+                                cursor:pointer;
+                            ">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        console.log(
+            "Inventario cargado:",
+            snapshot.size
+        );
+    }
+);
+
+
+window.eliminarEquipo = async function(id) {
+
+    const result = await Swal.fire({
+        title: '¿Eliminar equipo?',
+        text: 'Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        background: '#161823',
+        color: '#ffffff',
+        didOpen: (modal) => {
+            modal.style.borderRadius = '24px';
+        }
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+
+        await deleteDoc(doc(db, "inventory", id));
+
+        mostrarToast("Equipo eliminado");
+
+    } catch (error) {
+
+        console.error(error);
+
+        Swal.fire({
+            title: 'Error',
+            text: 'No se pudo eliminar el equipo',
+            icon: 'error',
+            confirmButtonColor: '#dc2626',
+            background: '#161823',
+            color: '#ffffff',
+            didOpen: (modal) => {
+                modal.style.borderRadius = '24px';
+            }
+        });
+    }
+};
         
+
+
+window.switchPeopleSubTab = function(tabId){
+
+    document.querySelectorAll(
+        '#people-section .subtab-content'
+    ).forEach(el => el.classList.remove('active'));
+
+    document.querySelectorAll(
+        '#people-section .subtab-btn'
+    ).forEach(el => el.classList.remove('active'));
+
+    document.getElementById(tabId).classList.add('active');
+
+    if(tabId === 'people-directory'){
+        document.getElementById('btn-people-directory')
+            .classList.add('active');
+    }
+
+    if(tabId === 'teams-directory'){
+        document.getElementById('btn-teams-directory')
+            .classList.add('active');
+    }
+};
+
+/*
+
+const teamMembersSelector =
+    document.getElementById("teamMembersSelector");
+
+onSnapshot(
+    collection(db, "people"),
+    (snapshot) => {
+
+        teamMembersSelector.innerHTML = "";
+
+        snapshot.forEach((docSnap) => {
+
+            const person = docSnap.data();
+
+            const nombre =
+                person.fullName ||
+                person.name ||
+                "Sin nombre";
+
+            const instrumento =
+                person.worshipInstrument || "";
+
+            teamMembersSelector.innerHTML += `
+                <label class="checkbox-group">
+
+                    <input
+                        type="checkbox"
+                        value="${docSnap.id}">
+
+                    <span>
+                        ${nombre}
+                        ${instrumento ? `(${instrumento})` : ""}
+                    </span>
+
+                </label>
+            `;
+        });
+    }
+);
+*/
+
+
+// 👥 REGISTRO DE TEAMS
+const teamForm = document.getElementById('teamForm');
+if (teamForm) {
+    teamForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const teamName = document.getElementById('teamName').value.trim();
+        
+        if (!teamName) {
+            mostrarToast("Por favor ingresa un nombre para el Team", "delete");
+            return;
+        }
+
+        try {
+  
+
+const existingTeams = await getDocs(
+    collection(db, "teams")
+);
+
+const alreadyExists =
+    existingTeams.docs.some(doc => {
+
+        const data = doc.data();
+
+        return (
+            (data.name || "")
+            .trim()
+            .toLowerCase()
+            ===
+            teamName
+            .trim()
+            .toLowerCase()
+        );
+
+    });
+
+if (alreadyExists) {
+
+    mostrarToast(
+        "Ya existe un Team con ese nombre"
+    );
+
+    return;
+}
+
+await addDoc(
+    collection(db, "teams"),
+    {
+        name: teamName,
+        members: [],
+        createdAt: serverTimestamp()
+    }
+);
+
+mostrarToast("Team creado con éxito");
+
+teamForm.reset();
+
+        } catch (err) {
+            console.error("Error al crear team:", err);
+            mostrarToast("Error al crear el team", "delete");
+        }
+    });
+}
+
+
+const teamsContainer = document.getElementById("teamsContainer");
+
+// 1. Delegación de eventos: El contenedor escucha a sus hijos, no importa si cambian.
+teamsContainer.addEventListener("dragover", (e) => {
+    e.preventDefault(); // Indispensable para habilitar el drop
+});
+
+teamsContainer.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    const zone = e.target.closest(".team-dropzone");
+    if (!zone) return;
+
+    const personId = e.dataTransfer.getData("personId");
+    const teamId = zone.dataset.teamId;
+    const voluntario = listaVoluntariosGlobal.find(v => v.id === personId);
+
+    if (!voluntario) return;
+
+    try {
+        await updateDoc(doc(db, "teams", teamId), {
+            members: arrayUnion({
+                id: voluntario.id,
+                nombre: voluntario.nombre,
+                area: voluntario.area,
+                instrument: voluntario.instrument || "" // 🌟 ESTO ES LO QUE FALTA
+            })
+        });
+        mostrarToast("Voluntario agregado al team");
+        // No necesitas llamar a render aquí, el onSnapshot de teams lo hará
+    } catch (error) {
+        console.error(error);
+        mostrarToast("Error al agregar voluntario", "delete");
+    }
+});
+
+
+let todosLosTeams = []; // Asegúrate de tener esta variable definida arriba
+
+onSnapshot(collection(db, "teams"), (snapshot) => {
+    teamsContainer.innerHTML = "";
+    todosLosTeams = []; // Resetear la variable global cada vez que llega data nueva
+
+    if (snapshot.empty) {
+        teamsContainer.innerHTML = `<p style="color:var(--text-muted)">No hay teams creados.</p>`;
+        renderVoluntariosDisponibles(); // Refrescamos lista izquierda
+        return;
+    }
+
+    snapshot.forEach(docSnap => {
+        const team = docSnap.data();
+        todosLosTeams.push(team); // 🌟 ¡ESTA LÍNEA ES LA QUE TE FALTABA!
+
+        const miembrosHtml = (team.members || []).map(m => `
+    <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        font-size:0.8rem;
+        background:rgba(255,255,255,0.05);
+        padding:6px 8px;
+        border-radius:8px;
+        margin-bottom:6px;
+    ">
+        <div>
+            ${m.nombre}
+            <span style="color:var(--text-muted)">
+                (${m.instrument || m.area})
+            </span>
+        </div>
+
+        <button
+            onclick="quitarMiembro('${docSnap.id}','${m.id}')"
+            style="
+                background:none;
+                border:none;
+                color:#ef4444;
+                cursor:pointer;
+                font-size:16px;
+                font-weight:bold;
+            ">
+            ✕
+        </button>
+    </div>
+`).join('');
+
+        teamsContainer.innerHTML += `
+            <div class="service-item team-dropzone" data-team-id="${docSnap.id}">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h4>${team.name}</h4>
+                    <button onclick="eliminarTeam('${docSnap.id}')" style="background:none; border:none; color:#ef4444; font-size:18px; cursor:pointer; font-weight:bold;">✕</button>
+                </div>
+                <div style="margin-top:10px;">
+                    ${miembrosHtml || '<p style="font-size:0.7rem; color:var(--text-muted);">Vacío</p>'}
+                </div>
+            </div>
+        `;
+    });
+
+    // Refrescamos el panel izquierdo (esto filtrará automáticamente a los asignados)
+    renderVoluntariosDisponibles();
+});
+
+// 3. Funciones globales
+window.eliminarTeam = async function(teamId) {
+    if (!confirm("¿Eliminar este Team?")) return;
+    try {
+        await deleteDoc(doc(db, "teams", teamId));
+        mostrarToast("Team eliminado");
+    } catch(error) {
+        console.error(error);
+        mostrarToast("Error eliminando Team");
+    }
+};
+
+window.quitarMiembro = async function(teamId, memberId) {
+
+    try {
+
+        const teamRef = doc(db, "teams", teamId);
+
+        const teamSnap = await getDoc(teamRef);
+
+        if (!teamSnap.exists()) return;
+
+        const teamData = teamSnap.data();
+
+        const nuevosMiembros = (teamData.members || [])
+            .filter(m => m.id !== memberId);
+
+        await updateDoc(teamRef, {
+            members: nuevosMiembros
+        });
+
+        mostrarToast("Voluntario removido del Team");
+
+    } catch(error) {
+
+        console.error(error);
+
+        mostrarToast(
+            "Error removiendo voluntario",
+            "delete"
+        );
+
+    }
+};
+
+function renderVolunteer(person) {
+    return `
+        <div class="volunteer-card" 
+             draggable="true" 
+             ondragstart="event.dataTransfer.setData('personId', '${person.id}')" 
+             data-person-id="${person.id}">
+            ${person.fullName}
+        </div>
+    `;
+}
+
+// Nota: renderTeam parece que no la usas en el renderizado principal, 
+// pero la dejo tal cual la tenías.
+function renderTeam(team) {
+    return `
+        <div class="panel-window team-card" data-team-id="${team.id}">
+            <div style="display:flex; justify-content:space-between; margin-bottom:1rem;">
+                <h3>${team.name}</h3>
+                <span>${team.members?.length || 0}</span>
+            </div>
+            <div class="team-dropzone" data-team-id="${team.id}" style="min-height:120px; display:flex; flex-direction:column; gap:.5rem;"></div>
+        </div>
+    `;
+}
+
+
+
+
+const audioElements = [];
+
+window.reproducirCancion = (song) => {
+    const container = document.getElementById("stemsPlayerContainer");
+    const slidersContainer = document.getElementById("slidersContainer");
+
+    document.getElementById("playingSongTitle").innerText = `Reproduciendo: ${song.title}`;
+
+    // Limpiar reproductor anterior
+    audioElements.forEach(audio => { audio.pause(); audio.src = ""; });
+    audioElements.length = 0;
+    slidersContainer.innerHTML = "";
+
+    // Crear stems
+    Object.entries(song.stems).forEach(([name, url]) => {
+        const audio = new Audio(url);
+        audio.loop = true;
+        audio.preload = "auto"; // 🌟 Forzamos carga inmediata
+        audioElements.push(audio);
+
+        // En tu función JS
+// Dentro del forEach:
+const wrapper = document.createElement("div");
+wrapper.style.cssText = "display: flex; flex-direction: column; align-items: center; width: 60px; margin-bottom: 10px;";
+
+        const label = document.createElement("label");
+        label.textContent = name.toUpperCase();
+        label.style.fontSize = "0.7rem";
+        label.style.display = "block";
+        label.style.marginBottom = "0.5rem";
+
+        const slider = document.createElement("input");
+        slider.type = "range";
+        slider.className = 'vertical-slider';
+        slider.min = 0; slider.max = 1; slider.step = 0.01; slider.value = 1;
+       
+        slider.addEventListener("input", () => {
+            audio.volume = parseFloat(slider.value);
+        });
+
+        wrapper.appendChild(label);
+        wrapper.appendChild(slider);
+        slidersContainer.appendChild(wrapper);
+    });
+
+    container.style.display = "block";
+    mostrarToast("Canción cargada, presiona Play");
+};
+
+// 🌟 ESTAS SON LAS FUNCIONES QUE FALTABAN LLAMAR
+window.iniciarPlay = () => {
+    console.log("Iniciando pistas...");
+    audioElements.forEach(a => {
+        a.play().catch(e => console.error("Error al reproducir:", e));
+    });
+};
+
+window.detenerPlay = () => {
+    audioElements.forEach(a => { a.pause(); a.currentTime = 0; });
+};
+
+
+// 🌟 Conexión segura de botones fuera del HTML
+document.addEventListener("DOMContentLoaded", () => {
+    const playBtn = document.getElementById("btnPlayFinal");
+    const stopBtn = document.getElementById("btnStopFinal");
+
+    if (playBtn) {
+        playBtn.addEventListener("click", () => {
+            console.log("Play presionado");
+            audioElements.forEach(a => a.play().catch(e => console.error("Error:", e)));
+        });
+    }
+
+    if (stopBtn) {
+        stopBtn.addEventListener("click", () => {
+            audioElements.forEach(a => { a.pause(); a.currentTime = 0; });
+        });
+    }
+});
+
+
     </script>
 </body>
 </html>
