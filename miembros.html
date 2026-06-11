@@ -1840,37 +1840,34 @@ window.reproducirCancion = async (song) => {
     
     document.getElementById("playingSongTitle").innerText = `Reproduciendo: ${song.title}`;
 
-    // 1. Limpieza total
-    window.detenerPlay(); 
+    window.detenerPlay();
     slidersContainer.innerHTML = "";
     
-    // 2. Inicializar contexto y reanudar si está suspendido (Crucial en móvil)
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') await audioCtx.resume();
 
     const orden = ['click', 'cue', 'drums', 'instrumental', 'voces'];
 
-    // 3. Procesar canales
     for (const trackName of orden) {
         const claveReal = Object.keys(song.stems).find(k => k.toLowerCase() === trackName.toLowerCase());
         
         if (claveReal && song.stems[claveReal]) {
-            // A) Carga nativa (evita bloqueo CORS de fetch en móviles)
+            // 🌟 CAMBIO: Usamos el objeto Audio nativo (evita el bloqueo de fetch)
             const audio = new Audio(song.stems[claveReal]);
-            audio.crossOrigin = "anonymous";
+            audio.crossOrigin = "anonymous"; 
             audio.preload = "auto";
             
-            // Conectamos el elemento de audio al motor profesional
+            // Creamos la conexión profesional al motor de audio
             const source = audioCtx.createMediaElementSource(audio);
             const gainNode = audioCtx.createGain();
             
             source.connect(gainNode);
             gainNode.connect(audioCtx.destination);
             
-            // Guardamos la referencia para el Play/Stop sincronizado
+            // Guardamos la referencia para el Play/Stop
             audioBuffers.push({ audio: audio, gainNode: gainNode });
 
-            // B) Crear el Fader visual
+            // Crear el Fader
             const wrapper = document.createElement("div");
             wrapper.className = "mix-fader-wrapper";
             wrapper.style.cssText = `display: flex; flex-direction: column; align-items: center; width: 60px; height: 220px; flex-shrink: 0; gap: 10px;`;
@@ -1893,16 +1890,19 @@ window.reproducirCancion = async (song) => {
             slidersContainer.appendChild(wrapper);
         }
     }
-
     container.style.display = "flex";
 };
 
+
+
+
 // 🌟 Función Play sincronizada para el botón
 window.iniciarPlay = () => {
-    console.log("Iniciando pistas sincronizadas...");
+    // Esto es lo que evita que suene regado
+    const time = audioCtx.currentTime + 0.1;
     audioBuffers.forEach(item => {
-        item.audio.currentTime = 0; 
-        item.audio.play().catch(e => console.error("Error de play:", e));
+        item.audio.currentTime = 0; // Reset
+        item.audio.play();          // Play inmediato
     });
 };
 
