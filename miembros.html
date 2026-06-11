@@ -1949,7 +1949,6 @@ document
 
 
    document.addEventListener("click", (e) => {
-    
     // 1. Manejo de Pestañas (Tabs)
     if (e.target.classList.contains("tab-btn")) {
         const tabs = ['escaleta', 'setlist', 'bosquejo', 'equipo'];
@@ -1962,23 +1961,42 @@ document
         document.getElementById(targetId)?.classList.add('active');
     }
 
-    // 2. Manejo de Play
+    // 2. Manejo de Play (Sincronizado)
     if (e.target.id === "btnPlayFinal") {
-        console.log("Reproduciendo todos los canales...");
+        console.log("Preparando sincronización...");
         if (typeof audioElements !== 'undefined' && audioElements.length > 0) {
-            audioElements.forEach(a => a.play().catch(err => console.error("Error al reproducir:", err)));
+            let listos = 0;
+            audioElements.forEach(a => {
+                a.pause();
+                a.currentTime = 0;
+                // Si ya está listo, lo contamos
+                if (a.readyState >= 3) {
+                    listos++;
+                } else {
+                    a.oncanplaythrough = () => {
+                        listos++;
+                        if (listos === audioElements.length) {
+                            audioElements.forEach(audio => audio.play());
+                        }
+                    };
+                    a.load();
+                }
+            });
+            // Si todos ya estaban cargados previamente
+            if (listos === audioElements.length) {
+                audioElements.forEach(a => a.play());
+            }
         }
     }
 
     // 3. Manejo de Stop
     if (e.target.id === "btnStopFinal") {
-        console.log("Deteniendo audio...");
         if (typeof audioElements !== 'undefined') {
             audioElements.forEach(a => { a.pause(); a.currentTime = 0; });
         }
     }
 
-    // 4. Manejo de Abrir Multitrack
+    // 4. Abrir Multitrack
     if (e.target.classList.contains("btn-open-multitrack")) {
         const songTitle = e.target.getAttribute("data-song-title");
         if (songTitle && typeof abrirMultitrackMiembro === 'function') {
@@ -1986,13 +2004,13 @@ document
         }
     }
 
-    // 5. Manejo de Cerrar Multitrack (Botón "Cerrar" interno)
+    // 5. Cerrar Multitrack
     if (e.target.id === "btnCloseMultitrack") {
         if (typeof detenerPlay === 'function') detenerPlay();
         document.getElementById("stemsPlayerContainer").style.display = "none";
     }
 
-    // 6. Manejo de Regreso en Móvil
+    // 6. Regreso en Móvil
     if (e.target.closest("#btnBackMobile")) {
         const panelServicios = document.querySelector(".portal-container .panel-window");
         const workspaceWindow = document.getElementById("workspaceWindow");
